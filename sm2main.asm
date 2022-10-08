@@ -5,19 +5,14 @@
 ;-------------------------------------------------------------------------------------
 
 Start:
-.ifdef ANN
+            sei                         ;pretty standard 6502 type init here
+            cld
+            lda #%00010000              ;init PPU control register 1
+            sta PPU_CTRL
+            ldx #$ff                    ;reset stack pointer
+            txs
             lda WorldNumber             ;get world number and save it temporarily
             pha
-            lda #$27
-            sta PauseSoundQueue
-            sta FDS_CTRL_REG
-.else
-            lda Mirror_FDS_CTRL_REG     ;get setting previously used by FDS bios
-            and #$f7                    ;and set for vertical mirroring
-            sta FDS_CTRL_REG
-            lda WorldNumber             ;get world number and save it temporarily
-            pha
-.endif
             ldy #ColdBootOffset         ;load default cold boot pointer
             ldx #$05
 WBootCheck: lda TopScoreDisplay,x       ;first checkpoint, check each score digit

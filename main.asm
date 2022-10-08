@@ -130,23 +130,23 @@ _BankJSR:
 VStart:
       sei
       ldx #$FF
-      stx $8000
       txs
       lda #%01000000         ; disable apu irq
       sta $4017
-      lda #3
-      sta MMC5_CHRMode       ; use 1kb chr banking
-      lda #1
-      sta MMC5_PRGMode       ; use 16kb prg banking
-      lda #GameBank
-      jsr SetPRGBank
-      sta MMC5_PRGBank7
-      lda #$44
-      sta MMC5_Nametables    ; set vertical mirroring
       lda #%10
       sta MMC5_RAMProtect1
       lda #%01
       sta MMC5_RAMProtect2
+      lda #3
+      sta MMC5_CHRMode       ; use 1kb chr banking
+      lda #1
+      sta MMC5_PRGMode       ; use 16kb prg banking
+      lsr a
+      sta MMC5_PRGBank3
+      lda #GameBank
+      jsr SetPRGBank
+      lda #$44
+      sta MMC5_Nametables    ; set vertical mirroring
       jmp $8000
 
 SetPRGBank:

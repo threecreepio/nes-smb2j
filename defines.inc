@@ -27,13 +27,6 @@ JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
 
-FDS_IRQTIMER_LOW      = $4020
-FDS_IRQTIMER_HIGH     = $4021
-FDS_IRQTIMER_CTRL     = $4022
-FDS_CTRL_REG          = $4025
-FDS_STATUS            = $4030
-FDS_DRIVE_STATUS      = $4032
-
 ; GAME SPECIFIC DEFINES
 
 ObjectOffset          = $08
@@ -55,7 +48,6 @@ GameEngineSubroutine  = $0e
 
 Mirror_PPU_CTRL       = $0778
 Mirror_PPU_MASK       = $0779
-Mirror_FDS_CTRL_REG   = $fa
 FileListNumber        = $07f7
 
 OperMode              = $0770
@@ -577,11 +569,6 @@ GroundMusicHeaderOfs  = $07c7
 AltRegContentFlag     = $07ca
 
 ANNMushroomRetainerGfxHandler = $77C
-
-;SUBROUTINES IN FAMICOM DISK SYSTEM BIOS
-FDSBIOS_DELAY     = $e149
-FDSBIOS_LOADFILES = $e1f8
-FDSBIOS_WRITEFILE = $e239
 
 ;-------------------------------------------------------------------------------------
 ;CONSTANTS
