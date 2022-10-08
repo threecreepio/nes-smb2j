@@ -1,865 +1,6 @@
-;SMB2J DISASSEMBLY (SM2MAIN portion)
+.include "defines.inc"
 
-;-------------------------------------------------------------------------------------
-;DEFINES
-
-;NES specific hardware defines
-
-PPU_CTRL              = $2000
-PPU_MASK              = $2001
-PPU_STATUS            = $2002
-PPU_SPR_ADDR          = $2003
-PPU_SPR_DATA          = $2004
-PPU_SCROLL            = $2005
-PPU_ADDRESS           = $2006
-PPU_DATA              = $2007
-
-SND_REGISTER          = $4000
-SND_SQUARE1_REG       = $4000
-SND_SQUARE2_REG       = $4004
-SND_TRIANGLE_REG      = $4008
-SND_NOISE_REG         = $400c
-SND_DELTA_REG         = $4010
-SND_MASTERCTRL_REG    = $4015
-
-SPR_DMA               = $4014
-JOYPAD_PORT           = $4016
-JOYPAD_PORT1          = $4016
-JOYPAD_PORT2          = $4017
-
-FDS_IRQTIMER_LOW      = $4020
-FDS_IRQTIMER_HIGH     = $4021
-FDS_IRQTIMER_CTRL     = $4022
-FDS_CTRL_REG          = $4025
-FDS_STATUS            = $4030
-FDS_DRIVE_STATUS      = $4032
-
-; GAME SPECIFIC DEFINES
-
-ObjectOffset          = $08
-
-FrameCounter          = $09
-
-SavedJoypadBits       = $06fc
-SavedJoypad1Bits      = $06fc
-SavedJoypad2Bits      = $06fd
-JoypadBitMask         = $074a
-JoypadOverride        = $0758
-
-A_B_Buttons           = $0a
-PreviousA_B_Buttons   = $0d
-Up_Down_Buttons       = $0b
-Left_Right_Buttons    = $0c
-
-GameEngineSubroutine  = $0e
-
-Mirror_PPU_CTRL       = $0778
-Mirror_PPU_MASK       = $0779
-Mirror_FDS_CTRL_REG   = $fa
-NameTableSelect       = $077a
-FileListNumber        = $07f7
-
-OperMode              = $0770
-OperMode_Task         = $0772
-ScreenRoutineTask     = $073c
-
-FDSBIOS_IRQFlag       = $0101
-IRQUpdateFlag         = $0722
-IRQAckFlag            = $077b
-DiskIOTask            = $07fc
-NotColdFlag           = $07fd
-
-GamePauseStatus       = $0776
-GamePauseTimer        = $0777
-
-DemoAction            = $0717
-DemoActionTimer       = $0718
-
-TimerControl          = $0747
-IntervalTimerControl  = $077f
-
-Timers                = $0780
-SelectTimer           = $0780
-PlayerAnimTimer       = $0781
-JumpSwimTimer         = $0782
-RunningTimer          = $0783
-BlockBounceTimer      = $0784
-SideCollisionTimer    = $0785
-JumpspringTimer       = $0786
-GameTimerCtrlTimer    = $0787
-ClimbSideTimer        = $0789
-EnemyFrameTimer       = $078a
-FrenzyEnemyTimer      = $078f
-BowserFireBreathTimer = $0790
-StompTimer            = $0791
-AirBubbleTimer        = $0792
-ScrollIntervalTimer   = $0795
-EnemyIntervalTimer    = $0796
-BrickCoinTimer        = $079d
-InjuryTimer           = $079e
-StarInvincibleTimer   = $079f
-ScreenTimer           = $07a0
-WorldEndTimer         = $07a1
-DemoTimer             = $07a2
-
-Sprite_Data           = $0200
-
-Sprite_Y_Position     = $0200
-Sprite_Tilenumber     = $0201
-Sprite_Attributes     = $0202
-Sprite_X_Position     = $0203
-
-ScreenEdge_PageLoc    = $071a
-ScreenEdge_X_Pos      = $071c
-ScreenLeft_PageLoc    = $071a
-ScreenRight_PageLoc   = $071b
-ScreenLeft_X_Pos      = $071c
-ScreenRight_X_Pos     = $071d
-
-PlayerFacingDir       = $33
-DestinationPageLoc    = $34
-VictoryWalkControl    = $35
-ScrollFractional      = $0768
-SecondaryMsgCounter   = $0749
-MsgCounter            = $0719
-MsgFractional         = $0749
-
-HorizontalScroll      = $073f
-VerticalScroll        = $0740
-ScrollLock            = $0723
-ScrollThirtyTwo       = $073d
-Player_X_Scroll       = $06ff
-Player_Pos_ForScroll  = $0755
-ScrollAmount          = $0775
-
-AreaData              = $e7
-AreaDataLow           = $e7
-AreaDataHigh          = $e8
-EnemyData             = $e9
-EnemyDataLow          = $e9
-EnemyDataHigh         = $ea
-
-AreaParserTaskNum     = $071f
-ColumnSets            = $071e
-CurrentPageLoc        = $0725
-CurrentColumnPos      = $0726
-BackloadingFlag       = $0728
-BehindAreaParserFlag  = $0729
-AreaObjectPageLoc     = $072a
-AreaObjectPageSel     = $072b
-AreaDataOffset        = $072c
-AreaObjOffsetBuffer   = $072d
-AreaObjectLength      = $0730
-StaircaseControl      = $0734
-AreaObjectHeight      = $0735
-MushroomLedgeHalfLen  = $0736
-EnemyDataOffset       = $0739
-EnemyObjectPageLoc    = $073a
-EnemyObjectPageSel    = $073b
-MetatileBuffer        = $06a1
-BlockBufferColumnPos  = $06a0
-CurrentNTAddr_Low     = $0721
-CurrentNTAddr_High    = $0720
-AttributeBuffer       = $03f9
-
-LoopCommand           = $0745
-
-DisplayDigits         = $07d7
-TopScoreDisplay       = $07d7
-ScoreAndCoinDisplay   = $07dd
-PlayerScoreDisplay    = $07dd
-GameTimerDisplay      = $07ec
-CoinDisplay           = $07e7
-DigitModifier         = $0134
-
-VerticalFlipFlag      = $0109
-FloateyNum_Control    = $0110
-ShellChainCounter     = $0125
-FloateyNum_Timer      = $012c
-FloateyNum_X_Pos      = $0117
-FloateyNum_Y_Pos      = $011e
-FlagpoleFNum_Y_Pos    = $010d
-FlagpoleFNum_YMFDummy = $010e
-FlagpoleScore         = $010f
-FlagpoleCollisionYPos = $070f
-StompChainCounter     = $0484
-FlagpoleMusicFlag     = $07f6
-
-VRAM_Buffer1_Offset   = $0300
-VRAM_Buffer1          = $0301
-VRAM_Buffer2_Offset   = $0340
-VRAM_Buffer2          = $0341
-VRAM_Buffer_AddrCtrl  = $0773
-
-DisableScreenFlag     = $0774
-DisableIntermediate   = $0769
-ColorRotateOffset     = $06d4
-
-TerrainControl        = $0727
-AreaStyle             = $0733
-ForegroundScenery     = $0741
-BackgroundScenery     = $0742
-CloudTypeOverride     = $0743
-BackgroundColorCtrl   = $0744
-AreaType              = $074e
-AreaAddrsLOffset      = $074f
-AreaPointer           = $0750
-
-PlayerEntranceCtrl    = $0710
-GameTimerSetting      = $0715
-AltEntranceControl    = $0752
-EntrancePage          = $0751
-WarpZoneControl       = $06d6
-ChangeAreaTimer       = $06de
-
-MultiLoopCorrectCntr  = $06d9
-MultiLoopPassCntr     = $06da
-
-FetchNewGameTimerFlag = $0757
-GameTimerExpiredFlag  = $0759
-
-.ifdef ANN
-PrimaryHardMode       = $077d
-.else
-PrimaryHardMode       = $076a
-.endif
-SecondaryHardMode     = $06cc
-WorldSelectNumber     = $076b
-CompletedWorlds       = $07fa
-HardWorldFlag         = $07fb
-ContinueMenuSelect    = $07f8
-
-SelectedPlayer        = $0753
-PlayerSize            = $0754
-PlayerStatus          = $0756
-
-OnscreenPlayerInfo    = $075a
-NumberofLives         = $075a ;used by current player
-HalfwayPage           = $075b
-LevelNumber           = $075c ;the actual dash number
-Hidden1UpFlag         = $075d
-CoinTally             = $075e
-WorldNumber           = $075f
-AreaNumber            = $0760 ;internal number used to find areas
-
-CoinTallyFor1Ups      = $0748
-
-BalPlatformAlignment  = $03a0
-Platform_X_Scroll     = $03a1
-PlatformCollisionFlag = $03a2
-YPlatformTopYPos      = $0401
-YPlatformCenterYPos   = $58
-
-BrickCoinTimerFlag    = $06bc
-StarFlagTaskControl   = $0746
-
-PseudoRandomBitReg    = $07a7
-WarmBootValidation    = $07ff
-
-SprShuffleAmtOffset   = $06e0
-SprShuffleAmt         = $06e1
-SprDataOffset         = $06e4
-Player_SprDataOffset  = $06e4
-Enemy_SprDataOffset   = $06e5
-Block_SprDataOffset   = $06ec
-Alt_SprDataOffset     = $06ec
-Bubble_SprDataOffset  = $06ee
-FBall_SprDataOffset   = $06f1
-Misc_SprDataOffset    = $06f3
-SprDataOffset_Ctrl    = $03ee
-
-Player_State          = $1d
-Enemy_State           = $1e
-Fireball_State        = $24
-Block_State           = $26
-Misc_State            = $2a
-
-Player_MovingDir      = $45
-Enemy_MovingDir       = $46
-
-SprObject_X_Speed     = $57
-Player_X_Speed        = $57
-Enemy_X_Speed         = $58
-Fireball_X_Speed      = $5e
-Block_X_Speed         = $60
-Misc_X_Speed          = $64
-
-Jumpspring_FixedYPos  = $58
-JumpspringAnimCtrl    = $070e
-JumpspringForce       = $06db
-
-SprObject_PageLoc     = $6d
-Player_PageLoc        = $6d
-Enemy_PageLoc         = $6e
-Fireball_PageLoc      = $74
-Block_PageLoc         = $76
-Misc_PageLoc          = $7a
-Bubble_PageLoc        = $83
-
-SprObject_X_Position  = $86
-Player_X_Position     = $86
-Enemy_X_Position      = $87
-Fireball_X_Position   = $8d
-Block_X_Position      = $8f
-Misc_X_Position       = $93
-Bubble_X_Position     = $9c
-
-SprObject_Y_Speed     = $9f
-Player_Y_Speed        = $9f
-Enemy_Y_Speed         = $a0
-Fireball_Y_Speed      = $a6
-Block_Y_Speed         = $a8
-Misc_Y_Speed          = $ac
-
-SprObject_Y_HighPos   = $b5
-Player_Y_HighPos      = $b5
-Enemy_Y_HighPos       = $b6
-Fireball_Y_HighPos    = $bc
-Block_Y_HighPos       = $be
-Misc_Y_HighPos        = $c2
-Bubble_Y_HighPos      = $cb
-
-SprObject_Y_Position  = $ce
-Player_Y_Position     = $ce
-Enemy_Y_Position      = $cf
-Fireball_Y_Position   = $d5
-Block_Y_Position      = $d7
-Misc_Y_Position       = $db
-Bubble_Y_Position     = $e4
-
-SprObject_Rel_XPos    = $03ad
-Player_Rel_XPos       = $03ad
-Enemy_Rel_XPos        = $03ae
-Fireball_Rel_XPos     = $03af
-Bubble_Rel_XPos       = $03b0
-Block_Rel_XPos        = $03b1
-Misc_Rel_XPos         = $03b3
-
-SprObject_Rel_YPos    = $03b8
-Player_Rel_YPos       = $03b8
-Enemy_Rel_YPos        = $03b9
-Fireball_Rel_YPos     = $03ba
-Bubble_Rel_YPos       = $03bb
-Block_Rel_YPos        = $03bc
-Misc_Rel_YPos         = $03be
-
-SprObject_SprAttrib   = $03c4
-Player_SprAttrib      = $03c4
-Enemy_SprAttrib       = $03c5
-
-SprObject_X_MoveForce = $0400
-Enemy_X_MoveForce     = $0401
-
-SprObject_YMF_Dummy   = $0416
-Player_YMF_Dummy      = $0416
-Enemy_YMF_Dummy       = $0417
-Bubble_YMF_Dummy      = $042c
-
-SprObject_Y_MoveForce = $0433
-Player_Y_MoveForce    = $0433
-Enemy_Y_MoveForce     = $0434
-Block_Y_MoveForce     = $043c
-
-DisableCollisionDet   = $0716
-Player_CollisionBits  = $0490
-Enemy_CollisionBits   = $0491
-
-SprObj_BoundBoxCtrl   = $0499
-Player_BoundBoxCtrl   = $0499
-Enemy_BoundBoxCtrl    = $049a
-Fireball_BoundBoxCtrl = $04a0
-Misc_BoundBoxCtrl     = $04a2
-
-EnemyFrenzyBuffer     = $06cb
-EnemyFrenzyQueue      = $06cd
-Enemy_Flag            = $0f
-Enemy_ID              = $16
-
-PlayerGfxOffset       = $06d5
-Player_XSpeedAbsolute = $0700
-FrictionAdderHigh     = $0701
-FrictionAdderLow      = $0702
-RunningSpeed          = $0703
-SwimmingFlag          = $0704
-Player_X_MoveForce    = $0705
-DiffToHaltJump        = $0706
-JumpOrigin_Y_HighPos  = $0707
-JumpOrigin_Y_Position = $0708
-VerticalForce         = $0709
-VerticalForceDown     = $070a
-PlayerChangeSizeFlag  = $070b
-PlayerAnimTimerSet    = $070c
-PlayerAnimCtrl        = $070d
-DeathMusicLoaded      = $0712
-FlagpoleSoundQueue    = $0713
-CrouchingFlag         = $0714
-MaximumLeftSpeed      = $0450
-MaximumRightSpeed     = $0456
-
-WindFlag              = $07f9
-
-SprObject_OffscrBits  = $03d0
-Player_OffscreenBits  = $03d0
-Enemy_OffscreenBits   = $03d1
-FBall_OffscreenBits   = $03d2
-Bubble_OffscreenBits  = $03d3
-Block_OffscreenBits   = $03d4
-Misc_OffscreenBits    = $03d6
-EnemyOffscrBitsMasked = $03d8
-
-Cannon_Offset         = $046a
-Cannon_PageLoc        = $046b
-Cannon_X_Position     = $0471
-Cannon_Y_Position     = $0477
-Cannon_Timer          = $047d
-
-Whirlpool_Offset      = $046a
-Whirlpool_PageLoc     = $046b
-Whirlpool_LeftExtent  = $0471
-Whirlpool_Length      = $0477
-Whirlpool_Flag        = $047d
-
-VineFlagOffset        = $0398
-VineHeight            = $0399
-VineObjOffset         = $039a
-VineStart_Y_Position  = $039d
-
-Block_Orig_YPos       = $03e4
-Block_BBuf_Low        = $03e6
-Block_Metatile        = $03e8
-Block_PageLoc2        = $03ea
-Block_RepFlag         = $03ec
-Block_ResidualCounter = $03f0
-Block_Orig_XPos       = $03f1
-
-BoundingBox_UL_XPos   = $04ac
-BoundingBox_UL_YPos   = $04ad
-BoundingBox_DR_XPos   = $04ae
-BoundingBox_DR_YPos   = $04af
-BoundingBox_UL_Corner = $04ac
-BoundingBox_LR_Corner = $04ae
-EnemyBoundingBoxCoord = $04b0
-
-PowerUpType           = $39
-
-FireballBouncingFlag  = $3a
-FireballCounter       = $06ce
-FireballThrowingTimer = $0711
-
-HammerEnemyOffset     = $06ae
-JumpCoinMiscOffset    = $06b7
-
-Block_Buffer_1        = $0500
-Block_Buffer_2        = $05d0
-
-HammerThrowingTimer   = $03a2
-HammerBroJumpTimer    = $3c
-Misc_Collision_Flag   = $06be
-
-RedPTroopaOrigXPos    = $0401
-RedPTroopaCenterYPos  = $58
-
-XMovePrimaryCounter   = $a0
-XMoveSecondaryCounter = $58
-
-CheepCheepMoveMFlag   = $58
-CheepCheepOrigYPos    = $0434
-BitMFilter            = $06dd
-
-LakituReappearTimer   = $06d1
-LakituMoveSpeed       = $58
-LakituMoveDirection   = $a0
-
-FirebarSpinState_Low  = $58
-FirebarSpinState_High = $a0
-FirebarSpinSpeed      = $0388
-FirebarSpinDirection  = $34
-
-DuplicateObj_Offset   = $06cf
-NumberofGroupEnemies  = $06d3
-
-BlooperMoveCounter    = $a0
-BlooperMoveSpeed      = $58
-
-BowserBodyControls    = $0363
-BowserFeetCounter     = $0364
-BowserMovementSpeed   = $0365
-BowserOrigXPos        = $0366
-BowserFlameTimerCtrl  = $0367
-BowserFront_Offset    = $0368
-BridgeCollapseOffset  = $0369
-BowserGfxFlag         = $036a
-BowserHitPoints       = $0483
-MaxRangeFromOrigin    = $06dc
-
-BowserFlamePRandomOfs = $0417
-
-PiranhaPlantUpYPos    = $0417
-PiranhaPlantDownYPos  = $0434
-PiranhaPlant_Y_Speed  = $58
-PiranhaPlant_MoveFlag = $a0
-
-FireworksCounter      = $06d7
-ExplosionGfxCounter   = $58
-ExplosionTimerCounter = $a0
-
-;sound related defines
-Squ2_NoteLenBuffer    = $07b3
-Squ2_NoteLenCounter   = $07b4
-Squ2_EnvelopeDataCtrl = $07b5
-Squ1_NoteLenCounter   = $07b6
-Squ1_EnvelopeDataCtrl = $07b7
-Tri_NoteLenBuffer     = $07b8
-Tri_NoteLenCounter    = $07b9
-Noise_BeatLenCounter  = $07ba
-Squ1_SfxLenCounter    = $07bb
-Squ2_SfxLenCounter    = $07bd
-Sfx_SecondaryCounter  = $07be
-Noise_SfxLenCounter   = $07bf
-
-PauseSoundQueue       = $fa
-Square1SoundQueue     = $ff
-Square2SoundQueue     = $fe
-NoiseSoundQueue       = $fd
-AreaMusicQueue        = $fb
-EventMusicQueue       = $fc
-
-Square1SoundBuffer    = $f1
-Square2SoundBuffer    = $f2
-NoiseSoundBuffer      = $f3
-AreaMusicBuffer       = $f4
-EventMusicBuffer      = $07b1
-PauseSoundBuffer      = $07b2
-
-MusicData             = $f5
-MusicDataLow          = $f5
-MusicDataHigh         = $f6
-MusicOffset_Square2   = $f7
-MusicOffset_Square1   = $f8
-MusicOffset_Triangle  = $f9
-MusicOffset_Noise     = $07b0
-
-NoteLenLookupTblOfs   = $f0
-DAC_Counter           = $07c0
-NoiseDataLoopbackOfs  = $07c1
-NoteLengthTblAdder    = $07c4
-AreaMusicBuffer_Alt   = $07c5
-PauseModeFlag         = $07c6
-GroundMusicHeaderOfs  = $07c7
-AltRegContentFlag     = $07ca
-
-HardWorldJumpSpringHandler = $C4FE
-HardWorldEnemyGfxHandler = $C50C
-ANNMushroomRetainerGfxHandler = $77C
-
-;SUBROUTINES IN FAMICOM DISK SYSTEM BIOS
-FDSBIOS_DELAY     = $e149
-FDSBIOS_LOADFILES = $e1f8
-FDSBIOS_WRITEFILE = $e239
-
-;-------------------------------------------------------------------------------------
-;CONSTANTS
-
-;sound effects constants
-Sfx_SmallJump         = %10000000
-Sfx_Flagpole          = %01000000
-Sfx_Fireball          = %00100000
-Sfx_PipeDown_Injury   = %00010000
-Sfx_EnemySmack        = %00001000
-Sfx_EnemyStomp        = %00000100
-Sfx_Bump              = %00000010
-Sfx_BigJump           = %00000001
-
-Sfx_BowserFall        = %10000000
-Sfx_ExtraLife         = %01000000
-Sfx_PowerUpGrab       = %00100000
-Sfx_TimerTick         = %00010000
-Sfx_Blast             = %00001000
-Sfx_GrowVine          = %00000100
-Sfx_GrowPowerUp       = %00000010
-Sfx_CoinGrab          = %00000001
-
-Sfx_BowserFlame       = %00000010
-Sfx_BrickShatter      = %00000001
-
-;music constants
-Silence               = %10000000
-
-StarPowerMusic        = %01000000
-PipeIntroMusic        = %00100000
-CloudMusic            = %00010000
-CastleMusic           = %00001000
-UndergroundMusic      = %00000100
-WaterMusic            = %00000010
-GroundMusic           = %00000001
-
-TimeRunningOutMusic   = %01000000
-EndOfLevelMusic       = %00100000
-AltGameOverMusic      = %00010000
-EndOfCastleMusic      = %00001000
-VictoryMusic          = %00000100
-GameOverMusic         = %00000010
-DeathMusic            = %00000001
-
-;enemy object constants 
-GreenKoopa            = $00
-BuzzyBeetle           = $02
-RedKoopa              = $03
-HammerBro             = $05
-Goomba                = $06
-Bloober               = $07
-BulletBill_FrenzyVar  = $08
-GreyCheepCheep        = $0a
-RedCheepCheep         = $0b
-Podoboo               = $0c
-PiranhaPlant          = $0d
-GreenParatroopaJump   = $0e
-RedParatroopa         = $0f
-GreenParatroopaFly    = $10
-Lakitu                = $11
-Spiny                 = $12
-FlyCheepCheepFrenzy   = $14
-FlyingCheepCheep      = $14
-BowserFlame           = $15
-Fireworks             = $16
-BBill_CCheep_Frenzy   = $17
-Stop_Frenzy           = $18
-Bowser                = $2d
-PowerUpObject         = $2e
-VineObject            = $2f
-FlagpoleFlagObject    = $30
-StarFlagObject        = $31
-JumpspringObject      = $32
-BulletBill_CannonVar  = $33
-RetainerObject        = $35
-TallEnemy             = $09
-UpsideDownPiranhaP    = $04
-
-;other constants
-World1 = 0
-World2 = 1
-World3 = 2
-World4 = 3
-World5 = 4
-World6 = 5
-World7 = 6
-World8 = 7
-World9 = 8
-Level1 = 0
-Level2 = 1
-Level3 = 2
-Level4 = 3
-
-WarmBootOffset        = <$07d6
-ColdBootOffset        = <$07fe
-SoundMemory           = $07b0
-SwimTileRepOffset     = PlayerGraphicsTable + $9e
-MusicHeaderOffsetData = MusicHeaderData - 1
-MHD                   = MusicHeaderData
-
-A_Button              = %10000000
-B_Button              = %01000000
-Select_Button         = %00100000
-Start_Button          = %00010000
-Up_Dir                = %00001000
-Down_Dir              = %00000100
-Left_Dir              = %00000010
-Right_Dir             = %00000001
-
-AttractMode           = 0
-GameMode              = 1
-VictoryMode           = 2
-GameOverMode          = 3
-
-; imports from other files
-;SUBROUTINES IN SM2DATA2 AND SM2DATA4
-.import UpsideDownPipe_High
-.import UpsideDownPipe_Low
-.import WindOn
-.import WindOff
-.import SimulateWind
-.import BlowPlayerAround
-.import MoveUpsideDownPiranhaP
-.import ChangeHalfwayPages
-;SUBROUTINES IN SM2DATA3
-.import EraseLivesLines
-.import RunMushroomRetainers
-.import EndingDiskRoutines
-.import AwardExtraLives
-.import PrintVictoryMsgsForWorld8
-.import FadeToBlue
-.import ScreenSubsForFinalRoom
-;LABELS FROM SM2DATA3
-.ifdef ANN
-.import ANNEndingPalette
-.endif
-.import WriteNameToVictoryMsg
-.import UnusedAttribData
-.import FinalRoomPalette
-.import ThankYouMessageFinal
-.import PeaceIsPavedMsg
-.import WithKingdomSavedMsg
-.import HurrahMsg
-.import OurOnlyHeroMsg
-.import ThisEndsYourTripMsg
-.import OfALongFriendshipMsg
-.import PointsAddedMsg
-.import ForEachPlayerLeftMsg
-.import PrincessPeachsRoom
-.import FantasyWorld9Msg
-.import SuperPlayerMsg
-;from sm2data2
-.ifdef ANN
-.import E_Area06
-.import E_Area07
-.import E_Area04
-.import E_Area05
-.import E_Area09
-.import E_Area0B
-.import E_Area1E
-.import E_Area1F
-.import E_Area12
-.import E_Area21
-.import E_Area15
-.import E_Area16
-.import E_Area18
-.import E_Area19
-.import E_Area1A
-.import E_Area1B
-.import E_Area22
-.import E_Area27
-.import E_Area28
-.import E_Area2B
-.import E_Area2A
-.import L_Area06
-.import L_Area07
-.import L_Area04
-.import L_Area05
-.import L_Area09
-.import L_Area0B
-.import L_Area1E
-.import L_Area1F
-.import L_Area12
-.import L_Area21
-.import L_Area15
-.import L_Area16
-.import L_Area18
-.import L_Area19
-.import L_Area1A
-.import L_Area1B
-.import L_Area22
-.import L_Area27
-.import L_Area28
-.import L_Area2B
-.import L_Area2A
-.import MRetainerCHRWorld5
-.import MRetainerCHRWorld6
-.import MRetainerCHRWorld7
-.else
-.import E_CastleArea5
-.import E_CastleArea6
-.import E_CastleArea7
-.import E_CastleArea8
-.import E_GroundArea12
-.import E_GroundArea13
-.import E_GroundArea14
-.import E_GroundArea15
-.import E_GroundArea16
-.import E_GroundArea17
-.import E_GroundArea18
-.import E_GroundArea19
-.import E_GroundArea22
-.import E_GroundArea23
-.import E_GroundArea24
-.import E_GroundArea29
-.import E_UndergroundArea4
-.import E_UndergroundArea5
-.import E_WaterArea2
-.import E_WaterArea4
-.import E_WaterArea5
-.import L_CastleArea5
-.import L_CastleArea6
-.import L_CastleArea7
-.import L_CastleArea8
-.import L_GroundArea12
-.import L_GroundArea13
-.import L_GroundArea14
-.import L_GroundArea15
-.import L_GroundArea16
-.import L_GroundArea17
-.import L_GroundArea18
-.import L_GroundArea19
-.import L_GroundArea22
-.import L_GroundArea23
-.import L_GroundArea24
-.import L_GroundArea29
-.import L_UndergroundArea4
-.import L_UndergroundArea5
-.import L_WaterArea2
-.import L_WaterArea4
-.import L_WaterArea5
-;from sm2data3
-.import E_CastleArea9
-.import E_CastleArea10
-.import E_GroundArea25
-.import E_GroundArea26
-.import E_GroundArea27
-.import E_WaterArea6
-.import E_WaterArea7
-.import E_WaterArea8
-.import L_CastleArea9
-.import L_CastleArea10
-.import L_GroundArea25
-.import L_GroundArea26
-.import L_GroundArea27
-.import L_WaterArea6
-.import L_WaterArea7
-.import L_WaterArea8
-.endif
-
-; exports to other files
-.export SoundEngineJSRCode
-.export MoveSpritesOffscreen
-.export FreqRegLookupTbl
-.export NextWorld
-.export WriteTopStatusLine
-.export WriteBottomStatusLine
-.export GetAreaPalette
-.export GetBackgroundColor
-.export EndAreaPoints
-.export JumpEngine
-.export Square2SfxHandler
-.export PrintStatusBarNumbers
-.export DiskIDString
-.export EnemyGfxHandler
-.export SoundEngine
-.export DiskScreen
-.export WaitForEject
-.export WaitForReinsert
-.export ResetDiskVars
-.export DiskErrorHandler
-.export AttractModeSubs
-.export InitScreenPalette
-; sm2data4
-.export HalfwayPageNybbles
-.export GetPipeHeight
-.export FindEmptyEnemySlot
-.export SetupPiranhaPlant
-.export VerticalPipeData
-.export RenderUnderPart
-.export MetatileBuffer
-.export GetAreaType
-.ifndef ANN
-.export E_GroundArea21
-.export E_GroundArea28
-.export L_GroundArea10
-.export L_GroundArea28
-.else
-.export E_HArea10
-.export E_HArea11
-.export L_HArea10
-.export L_HArea11
-.endif
+.import GetAreaDataAddrs
 
 ;-------------------------------------------------------------------------------------
 
@@ -894,6 +35,8 @@ ColdBoot:   jsr InitializeMemory        ;clear memory using pointer in Y
             sta DiskIOTask
             pla
             sta WorldNumber
+            jsr InitializeSaveData      ;reset PRG-RAM if needed
+            jsr InitializeCHR
             lda #$a5                    ;set warm boot flag in case the player hits reset
             sta WarmBootValidation     
             sta PseudoRandomBitReg      ;set seed for pseudorandom register
@@ -904,8 +47,6 @@ ColdBoot:   jsr InitializeMemory        ;clear memory using pointer in Y
             jsr MoveAllSpritesOffscreen
             jsr InitializeNameTables
             inc DisableScreenFlag
-            lda #$c0                    ;set FDS BIOS flag to use NMI vector at $dffa
-            sta FDSBIOS_IRQFlag         ;enable all interrupts
             cli
             lda Mirror_PPU_CTRL
             ora #%10000000
@@ -914,6 +55,28 @@ EndlessLoop:
             lda $00                     ;endless loop
             jmp EndlessLoop
 
+
+InitializeCHR:
+    ldy #0
+    sty MMC5_CHRBank+0
+    iny
+    sty MMC5_CHRBank+1
+    iny
+    sty MMC5_CHRBank+2
+    iny
+    sty MMC5_CHRBank+3
+    iny
+    sty MMC5_CHRBank+4
+    iny
+    sty MMC5_CHRBank+5
+    iny
+    sty MMC5_CHRBank+6
+    iny
+    sty MMC5_CHRBank+7
+    iny
+    sty MMC5_CHRBank+8
+    rts
+
 ;-------------------------------------------------------------------------------------
 
 AddrTable_VRAM_Buffer1 =               00
@@ -921,47 +84,72 @@ AddrTable_WaterPaletteData =           01
 AddrTable_GroundPaletteData =          02
 AddrTable_UndergroundPaletteData =     03
 AddrTable_CastlePaletteData =          04
+AddrTable_TitleScreenGfxDataMod =      05
 AddrTable_VRAM_Buffer2 =               06
 AddrTable_BowserPaletteData =          08
 AddrTable_DaySnowPaletteData =         09
 AddrTable_NightSnowPaletteData =       10
 AddrTable_MushroomPaletteData =        11
-VRAM_AddrTable:
-   .word VRAM_Buffer1               ; 00
-   .word WaterPaletteData           ; 01
-   .word GroundPaletteData          ; 02
-   .word UndergroundPaletteData     ; 03
-   .word CastlePaletteData          ; 04
-   .word TitleScreenGfxData         ; 05
-   .word VRAM_Buffer2               ; 06
-   .word VRAM_Buffer2               ; 07
-   .word BowserPaletteData          ; 08
-   .word DaySnowPaletteData         ; 09
-   .word NightSnowPaletteData       ; 00
-   .word MushroomPaletteData        ; 11
-   .word ThankYouMessage            ; 12
-   .word MushroomRetainerMsg        ; 13
-   .word UnusedAttribData           ; 14
-   .word FinalRoomPalette           ; 15
-   .word ThankYouMessageFinal       ; 16
-   .word PeaceIsPavedMsg            ; 17
-   .word WithKingdomSavedMsg        ; 18
-   .word HurrahMsg                  ; 19
-   .word OurOnlyHeroMsg             ; 10
-   .word ThisEndsYourTripMsg        ; 21
-   .word OfALongFriendshipMsg       ; 22
-   .word PointsAddedMsg             ; 23
-   .word ForEachPlayerLeftMsg       ; 24
-   .word DiskErrorMainMsg           ; 25
-   .word DiskScreenPalette          ; 26
-   .word PrincessPeachsRoom         ; 27
-   .word MenuCursorTemplate         ; 28
+AddrTable_ThankYouMessage =            12
+AddrTable_MushroomRetainerMsg =        13
+AddrTable_ThankYouLuigiMessageFinal =  14
+AddrTable_FinalRoomPalette =           15
+AddrTable_ThankYouMessageFinal =       16
+AddrTable_PeaceIsPavedMsg =            17
+AddrTable_WithKingdomSavedMsg =        18
+AddrTable_HurrahMsg =                  19
+AddrTable_OurOnlyHeroMsg =             20
+AddrTable_ThisEndsYourTripMsg =        21
+AddrTable_OfALongFriendshipMsg =       22
+AddrTable_PointsAddedMsg =             23
+AddrTable_ForEachPlayerLeftMsg =       24
+AddrTable_ThankYouLuigiMessage =       25
+AddrTable_HurrahLuigiMsg =             26
+AddrTable_PrincessPeachsRoom =         27
+AddrTable_MenuCursorTemplate =         28
 .ifdef ANN
-   .word ANNMushroomRetainerPalette ; 29
-   .word ANNEndingPalette           ; 30
+AddrTable_ANNEndingPalette =           30
 .else
-   .word FantasyWorld9Msg           ; 29
-   .word SuperPlayerMsg             ; 30
+AddrTable_FantasyWorld9Msg =           29
+AddrTable_SuperPlayerMsg =             30
+.endif
+
+VRAM_AddrTable:
+   .word VRAM_Buffer1                ; 00
+   .word WaterPaletteData            ; 01
+   .word GroundPaletteData           ; 02
+   .word UndergroundPaletteData      ; 03
+   .word CastlePaletteData           ; 04
+   .word TitleScreenGfxDataMod       ; 05
+   .word VRAM_Buffer2                ; 06
+   .word VRAM_Buffer2                ; 07
+   .word BowserPaletteData           ; 08
+   .word DaySnowPaletteData          ; 09
+   .word NightSnowPaletteData        ; 10
+   .word MushroomPaletteData         ; 11
+   .word ThankYouMessage             ; 12
+   .word MushroomRetainerMsg         ; 13
+   .word ThankYouLuigiMessageFinal   ; 14
+   .word FinalRoomPalette            ; 15
+   .word ThankYouMessageFinal        ; 16
+   .word PeaceIsPavedMsg             ; 17
+   .word WithKingdomSavedMsg         ; 18
+   .word HurrahMsg                   ; 19
+   .word OurOnlyHeroMsg              ; 20
+   .word ThisEndsYourTripMsg         ; 21
+   .word OfALongFriendshipMsg        ; 22
+   .word PointsAddedMsg              ; 23
+   .word ForEachPlayerLeftMsg        ; 24
+   .word ThankYouLuigiMessage        ; 25
+   .word HurrahLuigiMsg              ; 26
+   .word PrincessPeachsRoom          ; 27
+   .word VRAM_Buffer1 ; unused       ; 28
+.ifdef ANN
+   .word VRAM_Buffer1       ; unused ; 29
+   .word ANNEndingPalette            ; 30
+.else
+   .word FantasyWorld9Msg            ; 29
+   .word SuperPlayerMsg              ; 30
 .endif
 
 VRAM_Buffer_Offset:
@@ -975,15 +163,15 @@ NMIHandler:
    sta Mirror_PPU_CTRL       ;from interrupting this one
    sta PPU_CTRL
    sei
+   ldy DisableScreenFlag
+   bne SkipIRQ
    lda IRQUpdateFlag
    beq SkipIRQ
-   lda #$58
-   sta FDS_IRQTIMER_LOW      ;set FDS IRQ timer to occur at the end of the status bar
-   lda #$16
-   sta FDS_IRQTIMER_HIGH
-   lda #$02
-   sta FDS_IRQTIMER_CTRL     ;enable it
+   lda #$1F                  ;set interrupt scanline
+   sta MMC5_SLCompare
    inc IRQAckFlag            ;reset flag to wait for next IRQ
+   lda #$80
+   sta MMC5_SLIRQ            ;reset IRQ
 SkipIRQ:
    lda Mirror_PPU_MASK
    and #%11100110            ;disable OAM and background display by default
@@ -1024,8 +212,7 @@ InitVRAMVars:
    lda Mirror_PPU_MASK
    sta PPU_MASK              ;dump PPU control register 2
    cli
-SoundEngineJSRCode:
-   jsr SoundEngine           ;run subs that need to be run on every frame
+   BankJSR SoundBank, SoundEngine
    jsr ReadJoypads
    jsr PauseRoutine
    jsr UpdateTopScore
@@ -1073,18 +260,9 @@ RotateLFSR:
    lsr
    bcs WaitForIRQ
    lda IRQUpdateFlag
-   beq CheckInvalidWorldNum
+   beq ExecutionTree
    jsr MoveSpritesOffscreen
    jsr SpriteShuffler
-CheckInvalidWorldNum:
-   lda WorldNumber           ;if world number somehow goes past 9, just end the game
-.ifdef ANN
-   cmp #$08
-.else
-   cmp #$09                  
-.endif
-   bcc ExecutionTree
-   jsr TerminateGame
 ExecutionTree:
    jsr OperModeExecutionTree ;run one of the program's four modes
 WaitForIRQ:
@@ -1096,46 +274,6 @@ WaitForIRQ:
    sta Mirror_PPU_CTRL       ;then park it at endless loop until next NMI
    sta PPU_CTRL
    rti
-
-IRQHandler:
-            sei
-            php                      ;save regs
-            pha
-            txa
-            pha
-            tya
-            pha
-            lda FDS_STATUS           ;get disk status register, acknowledge IRQs
-            pha
-            and #$02                 ;if byte transfer flag set, branch elsewhere
-            bne DelayNoScr
-            pla
-            and #$01                 ;if IRQ timer flag not set, branch to leave
-            beq ExitIRQ
-            lda Mirror_PPU_CTRL
-            and #$f7                 ;mask out sprite address high reg of ctrl reg mirror
-            ora NameTableSelect      ;mask in whatever's set here
-            sta Mirror_PPU_CTRL      ;update the register and its mirror
-            sta PPU_CTRL
-            lda #$00
-            sta FDS_IRQTIMER_CTRL    ;disable IRQ timer for the rest of the frame
-            lda HorizontalScroll
-            sta PPU_SCROLL           ;set scroll regs for the screen under the status bar
-            lda VerticalScroll       ;to achieve the split screen effect
-            sta PPU_SCROLL
-            lda #$00
-            sta IRQAckFlag           ;indicate IRQ was acknowledged
-            jmp ExitIRQ              ;skip over the next part to end IRQ
-DelayNoScr: pla                      ;throw away disk status reg byte
-            jsr FDSBIOS_DELAY        ;run delay subroutine in FDS bios
-ExitIRQ:    pla
-            tay                      ;return regs, reenable IRQs and leave
-            pla
-            tax
-            pla
-            plp
-            cli
-            rti
 
 ;-------------------------------------------------------------------------------------
 
@@ -1284,6 +422,18 @@ VictoryModeSubroutines2:
 
 VictoryModeSubsForW8:
     lda OperMode_Task
+    tay
+    cmp #7
+    bcc :+
+    sec
+    lda HackyTimer1
+    sbc #1
+    sta HackyTimer1
+    lda HackyTimer2
+    sbc #0
+    sta HackyTimer2
+:   clc
+    tya
     jsr JumpEngine
 
     .word BridgeCollapse
@@ -1303,113 +453,48 @@ VictoryModeSubsForW8:
 
 ;-------------------------------------------------------------------------------------
 
-.ifdef ANN
-MRetainerData:
-.addr MRetainerCHRWorld1
-.addr MRetainerCHRWorld2
-.addr MRetainerCHRWorld3
-.addr MRetainerCHRWorld4
-.addr MRetainerCHRWorld5
-.addr MRetainerCHRWorld6
-.addr MRetainerCHRWorld7
-
-; overwrites CHR CD0-CFF, 7A0-7BF and EE0-EEF
-MRetainerPPUOffsetHi:
-      .byte $0C,$07,$0E
-MRetainerPPUOffsetLo:
-      .byte $D0,$A0,$E0
-MRetainerPPULen:
-      .byte $30,$50,$60
-
-; Each world has it's own mushroom retainer in All Night Nippon.
-; These are loaded in at the start of the level.
-LoadWorldMushroomRetainer:
-      @TempPtr = $00
-      @TempOffset = $06
-      lda LevelNumber                ; get current level number
-      cmp #$03                       ; check if we're in a castle
-      bne @End                       ; if not - exit out
-      ldy HardWorldFlag              ; check if we're playing hard worlds
-      bne @End                       ; if so - exit out
-      sty @TempOffset                ; clear offset value
-      lda WorldNumber                ; get current world
-      asl a                          ; multiply by 2 to get offset
-      tax                            ; and store it in X
-      lda MRetainerData,x            ; place pointer for world in $00
-      sta @TempPtr                   ;
-      inx                            ;
-      lda MRetainerData,x            ;
-      sta @TempPtr+1                 ;
-@CopyNext:
-      ldx @TempOffset                ; load current offset
-      lda MRetainerPPUOffsetHi,x     ; set PPU address from table
-      sta PPU_ADDRESS                ;
-      lda MRetainerPPUOffsetLo,x     ;
-      sta PPU_ADDRESS                ;
-:     lda (@TempPtr),y               ; get next byte to copy to CHR
-      sta PPU_DATA                   ; and write it to PPU
-      iny                            ; increment loop
-      tya                            ;
-      cmp MRetainerPPULen,x          ; check if we've reached the end of the data
-      bne :-                         ; otherwise loop
-      inc @TempOffset                ; advance to next CHR region
-      lda @TempOffset                ; check if we're reached the end
-      cmp #$03                       ;
-      bne @CopyNext                  ; no - keep looping
-@End:
-      jmp IncModeTask                ; yes - move on to next task
-.endif
-
 .ifndef ANN
 WorldBits:
     .byte $01, $02, $04, $08, $10, $20, $40, $80
 
 SetupVictoryMode:
 .else
-MushroomRetainerPalettes:
-.addr MushroomRetainerPal0
-.addr MushroomRetainerPal1
-.addr MushroomRetainerPal2
-.addr MushroomRetainerPal3
-
-WMushroomRetainerOffsets:
-.byte $04,$02,$00,$04,$02,$00,$08
-
-MushroomRetainerPal0:
-.byte $30,$12
-MushroomRetainerPal1:
-.byte $30,$1A
-MushroomRetainerPal2:
-.byte $30,$16
-MushroomRetainerPal3:
-.byte $17,$2A
-
-ANNMushroomRetainerPalette:
-.byte $3F,$18,$04,$0F,$36
-ANNMushroomPlaceholder:
-.byte $00,$00,$00
+MushroomPal1: .byte $36, $36, $12, $36, $36, $12, $36
+MushroomPal2: .byte $30, $30, $30, $30, $30, $30, $20
+MushroomPal3: .byte $16, $1a, $36, $16, $1a, $36, $38
 
 SetupVictoryMode:
       @TempPtr = $00
       lda HardWorldFlag                 ; check if we're playing hard worlds
       bne @VictoryMode                  ; if so - skip to 2j code
-      ldx WorldNumber                   ; get current world
-      cpx #World8                       ; are we in world 8?
+      ldy WorldNumber                   ; get current world
+      cpy #World8                       ; are we in world 8?
       beq @VictoryMode                  ; yes - skip to 2j code
-      ldy WMushroomRetainerOffsets,x    ; no - get palette offset based on world
-      lda MushroomRetainerPalettes,y    ; then load palette location into pointer
-      sta @TempPtr                      ; store in a temporary pointer
-      iny                               ; 
-      lda MushroomRetainerPalettes,y    ; 
-      sta @TempPtr+1                    ; 
-      ldy #0                            ; 
-:     lda (@TempPtr),y                  ; load byte from pointer
-      sta ANNMushroomPlaceholder,y      ; and write it to the palette placeholder
-      iny                               ; 
-      cpy #2                            ; check if we've reached the end
-      bne :-                            ; no - continue loop
-      lda #$1D                          ; yes - set vram buffer to mushroom palette
-      sta VRAM_Buffer_AddrCtrl          ; what a bad way to copy two bytes... oh well.
+      ldx VRAM_Buffer1_Offset
+      lda #$3F
+      sta VRAM_Buffer1,x
+      inx
+      lda #$18
+      sta VRAM_Buffer1,x
+      inx
+      lda #$04
+      sta VRAM_Buffer1,x
+      inx
+      lda #$0F
+      sta VRAM_Buffer1,x
+      inx
+      lda MushroomPal1,y
+      sta VRAM_Buffer1,x
+      inx
+      lda MushroomPal2,y
+      sta VRAM_Buffer1,x
+      inx
+      lda MushroomPal3,y
+      sta VRAM_Buffer1,x
+      inx
+      lda #$00
+      sta VRAM_Buffer1,x
+      stx VRAM_Buffer1_Offset
 @VictoryMode:
 .endif
          ldx ScreenRight_PageLoc ;get page location of right side of screen
@@ -1421,6 +506,8 @@ SetupVictoryMode:
          ora CompletedWorlds     ;set bit according to the world the player was in
          sta CompletedWorlds
 .endif
+         lda #8                  ;load victory mode CHR data
+         sta MMC5_CHRBank+2
          lda HardWorldFlag       ;if not playing worlds A-D, branch to skip this
          beq W1Thru8
          lda WorldNumber         ;otherwise, if not on world D, branch to skip this
@@ -1431,6 +518,7 @@ SetupVictoryMode:
 W1Thru8: lda #EndOfCastleMusic
          sta EventMusicQueue     ;play win castle music
 
+LoadWorldMushroomRetainer:
 IncModeTask:
     inc OperMode_Task
     rts
@@ -1491,8 +579,15 @@ ThankPlayer:   tay
                cpy #$02
                bcs IncMsgCounter        ;skip printing of messages after the first two
 PrintMsgs:     tya                      ;put primary message counter in A
-               clc                      ;add 12 to counter, thus giving an appropriate value
+               cpy #0
+               bne :+
+               ldy SelectedPlayer
+               beq :+
+               lda #AddrTable_ThankYouLuigiMessage
+               bne @Store
+:              clc                      ;add 12 to counter, thus giving an appropriate value
                adc #$0c
+@Store:
                sta VRAM_Buffer_AddrCtrl ;write message counter to vram address controller
 IncMsgCounter: lda MsgFractional
                clc
@@ -1551,7 +646,7 @@ NextWorld: lda #$00
            lda #World9               ;make world 9 loop forever (or until game is over)
 NoPast9:   sta WorldNumber           ;update the world number
 .endif
-           jsr LoadAreaPointer       ;get pointer for the next area
+           BankJSR AreaBank, LoadAreaPointer
            inc FetchNewGameTimerFlag ;and get a new game timer
            lda #$01
            sta OperMode              ;and oh yeah, go back to game mode also
@@ -1739,8 +834,9 @@ BackgroundColors:
       .byte $0f, $22, $0f, $0f ;used by background color control if set
 
 PlayerColors:
-      .byte $22, $16, $27, $18 ;player's normal colors, may be overwritten
-      .byte $22, $37, $27, $16 ;player's colors after grabbing fire flower
+      .byte $22, $16, $27, $18 ;mario's colors
+      .byte $22, $30, $27, $19 ;luigi's colors
+      .byte $22, $37, $27, $16 ;fiery (used by both)
 
 GetBackgroundColor:
            ldy BackgroundColorCtrl   ;check background color control
@@ -1752,10 +848,13 @@ NoBGColor: inc ScreenRoutineTask     ;increment to next subtask and plod on thro
 GetPlayerColors:
                ldx VRAM_Buffer1_Offset  ;get current buffer offset
                ldy #$00
+               lda SelectedPlayer       ;check which player is on the screen
+               beq ChkFiery
+               ldy #$04                 ; load luigi offset
 ChkFiery:      lda PlayerStatus         ;check player status
                cmp #$02
                bne StartClrGet          ;if fiery, load alternate offset for fiery player
-               ldy #$04
+               ldy #$08
 StartClrGet:   lda #$03                 ;do four colors
                sta $00
 ClrGetLoop:    lda PlayerColors,y       ;fetch player colors and store them
@@ -1855,6 +954,8 @@ IncSubtask:
       rts
 
 DisplayIntermediate:
+               lda #0
+               sta NameTableSelect
                lda OperMode                 ;check primary mode of operation
                beq NoInter                  ;if in attract mode, do not display intermediate screens
                cmp #GameOverMode            ;are we in game over mode?
@@ -1991,7 +1092,7 @@ GameTextLoop:  lda GameText,x            ;load game text data
 EndGameText:   lda #$00                  ;put null terminator at end
                sta VRAM_Buffer1,y
                pla                       ;pull original text number from stack
-               beq ExWGT                 ;if printing top status bar, branch to leave
+               beq TopStatusBar          ;if printing top status bar, branch to leave
                tax
                dex                       ;if printing anything else besides world/lives display
                bne ExWGT                 ;then branch to leave
@@ -2010,6 +1111,15 @@ PutLives:      sta VRAM_Buffer1+8
                iny
                sty VRAM_Buffer1+21       ;we're done here
 ExWGT:         rts
+TopStatusBar:
+               lda SelectedPlayer        ; check selected player
+               beq ExWGT                 ; if mario, branch to leave
+               ldy #4                    ; otherwise, load luigi name length
+:              lda LuigiName,y           ; get luigi name bytes
+               sta VRAM_Buffer1+3,y      ; and overwrite mario name
+               dey                       ;
+               bpl :-                    ; loop until done
+               rts                       ; and exit
 
 WriteWarpZoneMessage:
          pha                   ;save warp zone control temporarily
@@ -2699,6 +1809,12 @@ ThankYouMessage:
   .byte $1e, $24, $16, $0a, $1b, $12, $18, $2b
   .byte $00
 
+ThankYouLuigiMessage:
+  .byte $25, $48, $10
+  .byte $1d, $11, $0a, $17, $14, $24, $22, $18
+  .byte $1e, $24, $15, $1e, $12, $10, $12, $2b
+  .byte $00
+
 MushroomRetainerMsg:
   .byte $25, $c5, $16
   .byte $0b, $1e, $1d, $24, $18, $1e, $1b, $24
@@ -2985,6 +2101,8 @@ InitializeArea:
 ClrTimersLoop: sta Timers,x             ;clear out timer memory
                dex
                bpl ClrTimersLoop
+               lda #2                   ; reset CHR bank
+               sta MMC5_CHRBank+2
                lda HalfwayPage
                ldy AltEntranceControl   ;if AltEntranceControl not set, use halfway page, if any found
                beq StartPage
@@ -3010,7 +2128,7 @@ SetInitNTHigh: sty CurrentNTAddr_High   ;store name table address
                dec AreaObjectLength+2
                lda #$0b                 ;set value for renderer to update 12 column sets
                sta ColumnSets           ;12 column sets = 24 metatile columns = 1 1/2 screens
-               jsr GetAreaDataAddrs     ;get enemy and level addresses and load header
+               BankJSR AreaBank, GetAreaDataAddrs
                lda HardWorldFlag        ;check to see if we're in worlds A-D
                bne SetSecHard           ;if so, activate the secondary no matter where we're at
                lda WorldNumber          ;otherwise check world number
@@ -3029,7 +2147,6 @@ DoneInitArea:  lda #Silence             ;silence music
                sta AreaMusicQueue
                lda #$01                 ;disable screen output
                sta DisableScreenFlag
-               jsr LoadPhysicsData
 .ifdef ANN
                jmp IncModeTask
 .else
@@ -3098,7 +2215,15 @@ SkipByte:     dey
               bne InitByteLoop
               dex               ;go onto the next page
               bpl InitPageLoop  ;do this until all desired pages of memory have been erased
+              lda #0
+              ldy #0
+:             sta $6300,y
+              sta $6400,y
+              sta $6500,y
+              iny
+              bne :-
               rts
+
 
 ;-------------------------------------------------------------------------------------
 
@@ -3231,6 +2356,16 @@ HalfwayPageNybbles:
       .byte $00, $00
 .endif
 
+HalfwayPageNybblesLW:
+     .byte $76, $50
+.ifdef ANN
+     .byte $D5, $70
+.else
+     .byte $65, $50
+.endif
+     .byte $75, $b0
+     .byte $00, $00
+
 PlayerLoseLife:
              inc DisableScreenFlag    ;disable screen and IRQ updates
              lda #$00
@@ -3252,7 +2387,10 @@ StillInGame: lda WorldNumber          ;multiply world number by 2 and use
              beq GetHalfway           ;leave offset alone
              inx
 GetHalfway:  ldy HalfwayPageNybbles,x ;get halfway page number with offset
-             lda LevelNumber          ;check area number's LSB
+             lda HardWorldFlag
+             beq :+
+             ldy HalfwayPageNybblesLW,x ;get halfway page number with offset
+:            lda LevelNumber          ;check area number's LSB
              lsr
              tya                      ;if in level 2 or 4, use lower nybble
              bcs MaskHPNyb
@@ -3319,7 +2457,7 @@ TerminateGame:
 ExRGO: rts
 
 ContinueGame:
-           jsr LoadAreaPointer       ;update level pointer with
+           BankJSR AreaBank, LoadAreaPointer       ;update level pointer with
            lda #$01                  ;actual world and area numbers, then
            sta PlayerSize            ;reset player's size, status, and
            inc FetchNewGameTimerFlag ;set game timer flag to reload
@@ -5475,7 +4613,7 @@ NextArea: inc AreaNumber            ;increment area number used for address load
           sta LevelNumber
           sta AreaNumber
 .endif
-NotW9:    jsr LoadAreaPointer       ;get new level pointer
+NotW9:    BankJSR AreaBank, LoadAreaPointer       ;get new level pointer
           inc FetchNewGameTimerFlag ;set flag to load new game timer
           jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
           sta HalfwayPage           ;reset halfway page to 0 (beginning)
@@ -5630,14 +4768,23 @@ InitCSTimer: sta ClimbSideTimer       ;initialize timer here
 ;-------------------------------------------------------------------------------------
 ;$00 - used to store offset to friction data
 
-JumpMForceData:
-      .byte $20, $20, $1e, $28, $28, $0d, $04
+Mario_JumpMForceData:
+  .byte $20, $20, $1e, $28, $28, $0d, $04
 
-FallMForceData:
-      .byte $70, $70, $60, $90, $90, $0a, $09
+Mario_FallMForceData:
+  .byte $70, $70, $60, $90, $90, $0a, $09
 
-FrictionData:
-      .byte $e4, $98, $d0
+Mario_FrictionData:
+  .byte $e4, $98, $d0
+
+Luigi_JumpMForceData:
+  .byte $18, $18, $18, $22, $22, $0d, $04
+
+Luigi_FallMForceData:
+  .byte $42, $42, $3e, $5d, $5d, $0a, $09
+
+Luigi_FrictionData:
+  .byte $b4, $68, $a0
 
 PlayerYSpdData:
       .byte $fc, $fc, $fc, $fb, $fb, $fe, $ff
@@ -5732,10 +4879,22 @@ ChkWtr:    lda #$01                   ;set value here (apparently always set to 
            lda Whirlpool_Flag         ;if whirlpool flag not set, branch
            beq GetYPhy
            iny                        ;otherwise increment to 6
-GetYPhy:   lda JumpMForceData,y       ;store appropriate jump/swim
-           sta VerticalForce          ;data here
-           lda FallMForceData,y
+GetYPhy:   lda SelectedPlayer         ; are we mario?
+           beq @MarioGetYPhy          ; yes - use mario physics
+           lda OperMode               ; no - are we in the victory sequence?
+           cmp #2                     ;
+           beq @MarioGetYPhy          ; yes - use mario physics
+           lda Luigi_JumpMForceData,y ; no - use luigi physics
+           sta VerticalForce
+           lda Luigi_FallMForceData,y
            sta VerticalForceDown
+           bne @SharedWifi
+@MarioGetYPhy:
+           lda Mario_JumpMForceData,y       ;store appropriate jump/swim
+           sta VerticalForce                ;data here
+           lda Mario_FallMForceData,y
+           sta VerticalForceDown
+@SharedWifi:
            lda InitMForceData,y
            sta Player_Y_MoveForce
            lda PlayerYSpdData,y
@@ -5795,16 +4954,28 @@ GetXPhy:   lda MaxLeftXSpdData,y      ;get maximum speed to the left
 GetXPhy2:  lda MaxRightXSpdData,y     ;get maximum speed to the right
            sta MaximumRightSpeed
            ldy $00                    ;get other value in memory
-           lda FrictionData,y         ;get value using value in memory as offset
+           lda SelectedPlayer         ; are we mario?
+           beq @MarioGetXPhy          ; yes - use mario physics
+           lda OperMode               ; no - are we in the victory sequence?
+           cmp #2                     ;
+           beq @MarioGetXPhy          ; yes - use mario physics
+           lda Luigi_FrictionData,y   ; no - use luigi physics
+           sta FrictionAdderLow
+           lda #$00
+           sta FrictionAdderHigh      ;init something here
+           rts
+@MarioGetXPhy:
+           lda Mario_FrictionData,y         ;get value using value in memory as offset
            sta FrictionAdderLow
            lda #$00
            sta FrictionAdderHigh      ;init something here
            lda PlayerFacingDir
            cmp Player_MovingDir       ;check facing direction against moving direction
            beq ExitPhy                ;if the same, branch to leave
-PhyOpcode: asl FrictionAdderLow       ;otherwise multiply friction by 2
+           asl FrictionAdderLow       ;otherwise multiply friction by 2
            rol FrictionAdderHigh      ;then leave (or just leave, if code was modified earlier
 ExitPhy:   rts
+
 
 ;-------------------------------------------------------------------------------------
 
@@ -6282,7 +5453,14 @@ PosJSpr:   lda Jumpspring_FixedYPos,x  ;get permanent vertical position
 .ifdef ANN
            ldy HardWorldFlag
            beq SetJSF
-           jsr HardWorldJumpSpringHandler
+           ldy WorldNumber
+           cpy #$01
+           beq @Shift
+           cpy #$02
+           bne @Done
+@Shift:
+           lda #$e0
+@Done:
 .else
            ldy WorldNumber
            cpy #World2
@@ -7485,13 +6663,6 @@ ExVMove: rts                          ;leave!
 
 ;-------------------------------------------------------------------------------------
 
-.ifndef ANN
-;some unused bytes
-         .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-.endif
-
-;-------------------------------------------------------------------------------------
-
 EnemiesAndLoopsCore:
             lda Enemy_Flag,x         ;check data here for MSB set
             pha                      ;save in stack
@@ -7545,6 +6716,13 @@ LoopCmdYPosition:
 
 MultiLoopCount:
   .byte $02, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01, $01
+.endif
+
+AreaDataOfsLoopback:
+.ifdef ANN
+  .byte $12, $36, $0E, $0E, $0E, $32, $32, $32, $0C, $54 
+.else
+  .byte $0c, $0c, $42, $42, $10, $10, $30, $30, $06, $0c, $54, $06
 .endif
 
 ExecGameLoopback:
@@ -8577,22 +7755,15 @@ NextED: jmp Inc2B                 ;jump to increment data offset and leave
 
 InitPiranhaPlant:
 .ifndef ANN
-         lda #$22                     ;set default attribute and range data here
-         sta $00                      ;range data is used to detect how close player is
-         lda #$13                     ;to the piranha plant to keep it inside the pipe
-         sta $01                      ;default data makes red piranha plants
+         ldy #1                     ;set default attribute and range data here
          lda HardWorldFlag
          bne PatchPP                  ;use default data if in worlds A-D
          lda WorldNumber
          cmp #$03
          bcs PatchPP                  ;use default data if in worlds 4-8
          dec $00
-         lda #$21                     ;otherwise make green piranha plant instead
-         sta $01
-PatchPP: lda $00
-         sta EnemyAttributeData+PiranhaPlant  ;patch over attribute and range data
-         lda $01
-         sta ChkPlayerNearPipe+3
+         ldy #0                     ;otherwise make green piranha plant instead
+PatchPP: sty PiranhaPlantType  ;patch over attribute and range data
 .endif
          lda #$01                     ;set initial speed
          sta PiranhaPlant_Y_Speed,x
@@ -10375,7 +9546,7 @@ MovePiranhaPlant:
       lda EnemyFrameTimer,x       ;check enemy's timer here
       bne PutinPipe               ;branch to end if not yet expired
       lda PiranhaPlant_MoveFlag,x ;check movement flag
-      bne SetupToMovePPlant       ;if moving, skip to part ahead
+      bne SetupToMovePPlant2       ;if moving, skip to part ahead
       lda PiranhaPlant_Y_Speed,x  ;if currently rising, branch 
       bmi ReversePlantSpeed       ;to move enemy upwards out of pipe
       jsr PlayerEnemyDiff         ;get horizontal difference between player and
@@ -10391,7 +9562,8 @@ ChkPlayerNearPipe:
 .ifdef ANN
       cmp #$13
 .else
-      cmp #$21
+      ldy PiranhaPlantType
+      cmp PlayerNearPipeDistances,y
 .endif
       bcc PutinPipe               ;if player within a certain distance, branch to leave
 
@@ -10403,17 +9575,17 @@ ReversePlantSpeed:
       sta PiranhaPlant_Y_Speed,x  ;save as new vertical speed
       inc PiranhaPlant_MoveFlag,x ;increment to set movement flag
 
-SetupToMovePPlant:
+SetupToMovePPlant2:
       lda PiranhaPlantDownYPos,x  ;get original vertical coordinate (lowest point)
       ldy PiranhaPlant_Y_Speed,x  ;get vertical speed
-      bpl RiseFallPiranhaPlant    ;branch if moving downwards
+      bpl RiseFallPiranhaPlant2   ;branch if moving downwards
       lda PiranhaPlantUpYPos,x    ;otherwise get other vertical coordinate (highest point)
 
-RiseFallPiranhaPlant:
+RiseFallPiranhaPlant2:
        sta $00                     ;save vertical coordinate here
 .ifndef ANN
-       lda EnemyAttributeData+PiranhaPlant
-       cmp #$22                    ;check for red piranha plants
+       lda PiranhaPlantType
+       cmp #1                      ;check for red piranha plants
        beq RedPP                   ;if found, skip to next part to execute code on every frame
 .endif
        lda FrameCounter            ;get frame counter
@@ -10436,6 +9608,11 @@ PutinPipe:
       lda #%00100000              ;set background priority bit in sprite
       sta Enemy_SprAttrib,x       ;attributes to give illusion of being inside pipe
       rts                         ;then leave
+
+.ifndef ANN
+PlayerNearPipeDistances:
+.byte $21, $13
+.endif
 
 ;-------------------------------------------------------------------------------------
 ;$07 - spinning speed
@@ -11993,7 +11170,6 @@ HandleAxeMetatile:
        sta OperMode_Task   ;reset secondary mode
        lda #$02
        sta OperMode        ;set primary mode to victory mode
-       jsr LoadMarioPhysics
        lda #$18
        sta Player_X_Speed  ;set horizontal speed and continue to erase axe metatile
 ErACM: ldy $02             ;load vertical high nybble offset for block buffer
@@ -12006,6 +11182,7 @@ ErACM: ldy $02             ;load vertical high nybble offset for block buffer
 ;$04 - low nybble of horizontal coordinate from block buffer
 ;$06-$07 - block buffer address
 
+.byte $69 ; fix to support vine wrapping in mmc5, removecoin_axe ends in $69 on FDS
 ClimbXPosAdder:
       .byte $f9, $07
 
@@ -12209,9 +11386,9 @@ GetWNum:
 SetWDest: tay
           dey                       ;decrement for use as world number
           sty WorldNumber           ;store as world number and offset
-          ldx WorldAddrOffsets,y    ;get offset to where this world's area offsets are
-          lda AreaAddrOffsets,x     ;get area offset based on world offset
-          sta AreaPointer           ;store area offset here to be used to change areas
+          ldx #0
+          BankJSR AreaBank, GetAreaPointer
+          sty AreaPointer           ;store area offset here to be used to change areas
           lda #Silence
           sta EventMusicQueue       ;silence music
           lda #$00
@@ -13045,13 +12222,6 @@ RetYC: and #%00001111              ;and mask out high nybble
        rts                         ;and leave
 
 ;-------------------------------------------------------------------------------------
-
-.ifndef ANN
-;unused bytes
-      .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff
-.endif
-
-;-------------------------------------------------------------------------------------
 ;$00 - offset to vine Y coordinate adder
 ;$02 - offset to sprite data
 
@@ -13539,11 +12709,7 @@ EnemyGraphicsTable:
       .byte $b9, $b8, $bb, $ba, $bc, $bc ;lakitu
       .byte $fc, $fc, $bd, $bd, $bc, $bc
       .byte $76, $79, $77, $77, $78, $78 ;princess/door to princess's room
-.ifdef ANN
-      .byte $cd, $7a, $ce, $7b, $cf, $ee ;ann retainer replacement
-.else
-      .byte $cd, $cd, $ce, $ce, $cf, $cf ;mushroom retainer
-.endif
+      .byte $aa, $ab, $ac, $ac, $ad, $ad ;ann princess replacement
       .byte $7d, $7c, $d1, $8c, $d3, $d2 ;hammer bro
       .byte $7d, $7c, $89, $88, $8b, $8a
       .byte $d5, $d4, $e3, $e2, $d3, $d2
@@ -13572,9 +12738,15 @@ EnemyGfxTableOffsets:
 
 EnemyAttributeData:
       .byte $01, $02, $03, $02, $22, $01, $03, $03
-      .byte $03, $01, $01, $02, $02, $21, $01, $02
+      .byte $03, $01, $01, $02, $02
+.ifdef ANN
+      .byte $21
+.else
+      .byte $20
+.endif
+      .byte $01, $02
       .byte $01, $01, $02, $ff, $02, $02, $01, $01
-      .byte $02, $02, $02
+      .byte $00, $00, $00
 
 EnemyAnimTimingBMask:
       .byte $08, $18
@@ -13582,28 +12754,16 @@ EnemyAnimTimingBMask:
 JumpspringFrameOffsets:
       .byte $18, $19, $1a, $19, $18
 
+.ifndef ANN
+PiranhaPlantGFXAttribs:
+      .byte $01, $02
+.endif
+
 EnemyGfxHandler:
 .ifdef ANN
        lda #$00
-       sta $077C
-       lda #$02
-       ldy HardWorldFlag
-       beq RedJS
-       jsr HardWorldEnemyGfxHandler
-.else
-       lda #$02
-       ldy WorldNumber             ;if the world number is not 2, 3 or 7
-       cpy #$01                    ;then use regular attributes for jumpsprings
-       beq GrnJS                   ;which will paint them red
-       cpy #$02
-       beq GrnJS                   ;otherwise use alternate attributes
-       cpy #$06                    ;to get the green superhigh jumpsprings
-       bne RedJS
-GrnJS: lsr
+       sta ANNMushroomRetainerGfxHandler
 .endif
-RedJS: sta EnemyAttributeData+$18  ;set jumpspring gfx attributes in the lookup table
-       sta EnemyAttributeData+$19
-       sta EnemyAttributeData+$1a
        lda Enemy_Y_Position,x      ;get enemy object vertical position
        sta $02
        lda Enemy_Rel_XPos          ;get enemy object horizontal position
@@ -13614,11 +12774,16 @@ RedJS: sta EnemyAttributeData+$18  ;set jumpspring gfx attributes in the lookup 
        sta VerticalFlipFlag        ;initialize vertical flip flag by default
        lda Enemy_MovingDir,x
        sta $03                     ;get enemy object moving direction
-       lda Enemy_SprAttrib,x
-       sta $04                     ;get enemy object sprite attributes
+       lda Enemy_SprAttrib,x       ;get enemy object sprite attributes
+       sta $04
        lda Enemy_ID,x
        cmp #PiranhaPlant           ;is enemy object piranha plant?
        bne CheckForRetainerObj     ;if not, branch
+.ifndef ANN
+       ldy PiranhaPlantType
+       lda PiranhaPlantGFXAttribs,y
+       sta $04
+.endif
        ldy PiranhaPlant_Y_Speed,x
        bmi CheckForRetainerObj     ;if piranha plant moving upwards, branch
        ldy EnemyFrameTimer,x
@@ -13654,6 +12819,30 @@ SBBAt: sta $04                     ;set new sprite attributes
 CheckForJumpspring:
       cmp #JumpspringObject        ;check for jumpspring object
       bne CheckForPodoboo
+       lda $04
+       ora #2
+.ifdef ANN
+       ldy HardWorldFlag
+       beq RedJS
+       ldy WorldNumber
+       cpy #$01
+       beq @Shift
+       cpy #$02
+       bne RedJS
+@Shift:
+       lsr a
+.else
+       ldy WorldNumber             ;if the world number is not 2, 3 or 7
+       cpy #$01                    ;then use regular attributes for jumpsprings
+       beq GrnJS                   ;which will paint them red
+       cpy #$02
+       beq GrnJS                   ;otherwise use alternate attributes
+       cpy #$06                    ;to get the green superhigh jumpsprings
+       bne RedJS
+GrnJS: lsr a
+.endif
+RedJS: 
+      sta $04
       ldy #$03                     ;set enemy state -2 MSB here for jumpspring object
       ldx JumpspringAnimCtrl       ;get current frame number for jumpspring object
       lda JumpspringFrameOffsets,x ;load data using frame number as offset
@@ -13839,12 +13028,17 @@ CheckToAnimateEnemy:
       sta $ec
       lda WorldNumber          ;are we on world 8?
       cmp #World8
-      bcs CheckDefeatedState   ;if so, leave the offset alone (use princess)
-.ifdef ANN
+      bcc @UseMushroom         ;if so, leave the offset alone (use princess)
+      lda OperMode_Task
+      cmp #6
+      bcc CheckDefeatedState
+      ldx #$a2
+      bne CheckDefeatedState
+@UseMushroom:
+      jsr DrawMushroomRetainerObject
       inc ANNMushroomRetainerGfxHandler
-.endif
-      ldx #$a2                 ;otherwise, set for mushroom retainer object instead
-      bne CheckDefeatedState   ;unconditional branch
+      clc
+      bcc PostDrawEnemyObject
 
 CheckForSecondFrame:
       lda FrameCounter            ;load frame counter
@@ -13881,6 +13075,7 @@ DrawEnemyObject:
       jsr DrawEnemyObjRow        ;draw six tiles of data
       jsr DrawEnemyObjRow        ;into sprite data
       jsr DrawEnemyObjRow
+PostDrawEnemyObject:
       ldx ObjectOffset           ;get enemy object offset
       ldy Enemy_SprDataOffset,x  ;get sprite data offset
       lda $ef
@@ -14016,8 +13211,9 @@ CheckToMirrorJSpring:
       lda $ef                     ;check for jumpspring object (any frame)
       cmp #$18
       bcc SprObjectOffscrChk      ;branch if not jumpspring object at all
-      lda #$80
-      ora EnemyAttributeData+$18
+      lda Sprite_Attributes,y
+      and #%00000011
+      ora #%10000000
       sta Sprite_Attributes+8,y   ;set vertical flip and palette bits of 
       sta Sprite_Attributes+16,y  ;second and third row left sprites
       ora #%01000000
@@ -14067,6 +13263,34 @@ AllRowC: pla                       ;get from stack once more
 
 ExEGHandler:
       rts
+
+DrawMushroomRetainerObject:
+      ldy $eb
+.ifdef ANN
+      ldx WorldNumber
+      lda ANNMRetainerTiles,x
+      tax
+.else
+      ldx #$80
+.endif
+      stx $0
+      inx
+      stx $1
+      jsr DrawSpriteObject
+      dex
+      dex
+      inx
+      stx $0
+      inx
+      stx $1
+      jsr DrawSpriteObject
+      dex
+      dex
+      inx
+      stx $0
+      inx
+      stx $1
+      jmp DrawSpriteObject
 
 DrawEnemyObjRow:
       lda EnemyGraphicsTable,x    ;load two tiles of enemy graphics
@@ -14440,6 +13664,7 @@ PlayerGraphicsTable:
       .byte $fc, $fc, $fc, $fc, $3a, $37, $4f, $4f ;small player standing
       .byte $fc, $fc, $00, $01, $4c, $4d, $4e, $4e ;intermediate grow frame
       .byte $00, $01, $4c, $4d, $4a, $4a, $4b, $4b ;big player standing
+SwimTileRepOffset     = PlayerGraphicsTable + $9e
 
 SwimKickTileNum:
       .byte $31, $46
@@ -15072,25 +14297,17 @@ HardWorldsCheckpoint:
 
       .word DiskScreen
       .word LoadHardWorlds
-      .word WaitForEject
-      .word WaitForReinsert
-      .word ResetDiskVars
 
 LoadHardWorlds:
          lda HardWorldFlag         ;if this is not set, skip this
          beq NoLoadHW
+         lda #$00                 ; mimic FDS bios
+         sta FrameCounter
          lda #$03
          sta FileListNumber        ;set filelist number to load SM2DATA4
-         jsr LoadFiles
-         bne ReturnedError         ;if returned with error number, branch
-         jsr CheckFileCount        ;check to see if loaded the correct number of files
-         bne BadFileCount          ;if not, branch to set error code
 NoLoadHW:
-         jsr LoadAreaPointer       ;update area pointer to get world 1 or A
-         lda HardWorldFlag         ;if this is not set, skip this
-         beq NoCHWP                ;otherwise run sub in SM2DATA4 to change halfway pages 
-         jsr ChangeHalfwayPages    ;for worlds A thru D
-NoCHWP:  inc Hidden1UpFlag
+         BankJSR AreaBank, LoadAreaPointer
+         inc Hidden1UpFlag
          inc FetchNewGameTimerFlag
          inc OperMode
          lda #$00
@@ -15105,9 +14322,6 @@ AttractModeDiskRoutines:
 
       .word DiskScreen
       .word LoadWorlds1Thru4
-      .word WaitForEject
-      .word WaitForReinsert
-      .word ResetDiskVars
 
 LoadWorlds1Thru4:
            lda NotColdFlag       ;if not set, just cold booted, thus no need to check world info
@@ -15119,17 +14333,11 @@ LoadWorlds1Thru4:
            bcc InitWorldPos      ;thus skip to the end, no need to load them again
 LW14Files: lda #$00              ;set filelist number to reload SM2MAIN, SM2CHAR1 and SM2SAVE
            sta FileListNumber
-           jsr LoadFiles         ;now reload those files
-           bne ReturnedError     ;if returned with error number, branch
-           jsr CheckFileCount    ;check to see if loaded the correct number of files
+           lda #$00                 ; mimic FDS bios
+           sta FrameCounter
            beq InitWorldPos      ;if so, branch to init player's world info
-
-BadFileCount:
-      lda #$40              ;otherwise, set error number
-
-ReturnedError:
-      inc DiskIOTask        ;move on to next subtask
-      jmp DiskErrorHandler
+           inc OperMode_Task
+           rts
 
 InitWorldPos:
       lda #$01              ;set flag to check player's world info
@@ -15146,25 +14354,23 @@ GameModeDiskRoutines:
 
       .word DiskScreen
       .word LoadWorlds5Thru8
-      .word WaitForEject
-      .word WaitForReinsert
-      .word ResetDiskVars
+
+DiskScreen:
+      inc DisableScreenFlag
+IncDiskIOTask:
+      inc DiskIOTask
+      rts
 
 LoadWorlds5Thru8:
       lda WorldNumber       ;if in worlds 1-4 or A-D
       cmp #World5           ;then leave without loading anything
-      bcc ResetDiskIOTask
-      lda FileListNumber    ;if worlds 5-8 were already loaded, leave
-      bne ResetDiskIOTask   ;as there's no need to load anything
       lda #$01
       sta FileListNumber    ;otherwise set filelist number to load SM2DATA2
-      jsr LoadFiles         ;and load it
-      bne ReturnedError     ;if returned with error number, branch
-      jsr CheckFileCount    ;check to see if loaded the correct number of files
-      bne BadFileCount      ;if not, branch to return error 40/$32
+      lda #$00                 ; mimic FDS bios
+      sta FrameCounter
 
 ResetDiskIOTask:
-      lda #$00              ;reset disk-related task number for next time
+      lda #0
       sta DiskIOTask
 VMDelay:
       inc OperMode_Task     ;move on to next task in the current mode
@@ -15177,7 +14383,12 @@ StartVMDelay:
 
 ContinueVMDelay:
       lda WorldEndTimer  ;wait for delay to end, then move on
+      bne @Done
+      inc DisableScreenFlag
+      lda #0
+      sta IRQUpdateFlag
       beq VMDelay
+@Done:
       rts
 
 VictoryModeDiskRoutines:
@@ -15186,20 +14397,12 @@ VictoryModeDiskRoutines:
 
       .word DiskScreen
       .word LoadEnding
-      .word WaitForEject
-      .word WaitForReinsert
-      .word ResetDiskVars
 
 LoadEnding:
         lda #$02                 ;set filelist number to load SM2DATA3, SM2CHAR2 and SM2SAVE
         sta FileListNumber
-        jsr LoadFiles            ;load them now
-        bne ReturnedError
-        jsr CheckFileCount       ;check to see if loaded the correct number of files
-        beq AddBeatenGame        ;if so, continue
-        lda #$00                 ;otherwise reset count of games beaten
-        sta GamesBeatenCount
-AddBeatenGame:
+        lda #$00                 ; mimic FDS bios
+        sta FrameCounter
         lda GamesBeatenCount     ;get the new count of games beaten we loaded (or reset)
         clc                      ;add one to it, to a maximum of 24/$18
         adc #$01
@@ -15220,156 +14423,33 @@ SetS2S: sta GamesBeatenCount
         sta PrimaryHardMode
 .endif
         jsr InitializeNameTables
-        jsr ResetDiskIOTask      ;end disk subroutines
-        jmp WriteNameToVictoryMsg
+        lda #$00
+        sta ScreenRoutineTask    ;init screen routine task
+        sta DiskIOTask
+        inc OperMode_Task     ;move on to next task in the current mode
+        rts
 
-CheckFileCount:
-      tya                      ;save number of files loaded to A
-      ldy FileListNumber       ;use file list number as offset
-      cmp FileCount,y          ;compare to number of files supposed to be loaded
-      rts
+InitializeSaveData:
+        lda #'A'                 ; check for magic header "ANN"
+        cmp $7000                ; in PRG bank at $7000
+        bne @Clear               ; clear save data if not found
+        lda #'N'                 ; check next byte..
+        cmp $7001                ;
+        bne @Clear               ; clear save data if not found
+        cmp $7002                ; check final byte
+        beq @SaveOK              ; if found, exit        
+@Clear:
+        lda #'A'                 ; write magic header
+        sta $7000                ;
+        lda #'N'                 ;
+        sta $7001                ;
+        sta $7002                ;
+        lda #0                   ; and clear save data
+        sta GamesBeatenCount     ;
+@SaveOK:
+        clc
+        rts
 
-;disk ID string copy used in FDS BIOS load routine
-;to compare to original at the disk info block
-DiskIDString:
-.ifdef ANN
-      .byte $01, $4E, $53, $4d, $20
-      .byte $00, $00, $00, $00, $00
-.else
-      .byte $01, $53, $4d, $42, $20
-      .byte $00, $00, $00, $00, $00
-.endif
-
-FileListAddrLow:
-      .byte <World14List, <World58List, <EndingList, <WorldADList
-FileListAddrHigh:
-      .byte >World14List, >World58List, >EndingList, >WorldADList
-
-;file lists used by FDS bios to load files
-;value $ff is end terminator
-World14List:
-      .byte $01, $05, $0f, $ff
-World58List:
-      .byte $20, $ff
-EndingList:
-      .byte $10, $30, $0f, $ff
-WorldADList:
-      .byte $40, $ff
-
-FileCount:
-      .byte $03, $01, $03, $01
-
-LoadFiles:
-      ldx FileListNumber      ;get address to file list
-      lda FileListAddrLow,x
-      sta ListPointer
-      lda FileListAddrHigh,x
-      sta ListPointer+1
-      jsr FDSBIOS_LOADFILES   ;now load the files
-
-;used by FDS BIOS routine
-             .word DiskIDString
-ListPointer: .word World14List  ;overwritten in RAM
-
-;execution continues here
-      rts
-
-DiskScreenPalette:
-  .byte $3f, $00, $04
-  .byte $0f, $30, $30, $0f
-  .byte $00
-
-DiskScreen:
-      lda #$00
-      sta Mirror_PPU_MASK
-      sta PPU_MASK
-      inc DisableScreenFlag
-      lda #$1a
-      sta VRAM_Buffer_AddrCtrl
-      jmp NextDiskIOTask
-
-WaitForEject:
-      lda #$00
-      sta NameTableSelect
-      sta DisableScreenFlag
-      lda FDS_DRIVE_STATUS  ;check disk inserted flag
-      lsr                   ;execute this routine until disk is ejected
-      bcc ThisDiskIOTask    ;note this routine is run on an error
-
-NextDiskIOTask:
-      inc DiskIOTask        ;move on to next subtask involving the disk drive
-ThisDiskIOTask:
-      rts                   ;or not, if branched here
-
-WaitForReinsert:
-      lda FDS_DRIVE_STATUS  ;check disk inserted flag
-      lsr                   ;execute this routine until disk is reinserted
-      bcc NextDiskIOTask    ;note this routine is run after the one
-      bcs ThisDiskIOTask    ;that checks for an ejected disk
-
-ResetDiskVars:
-      lda #$00
-      sta DiskIOTask        ;reset disk-related variables
-      sta FileListNumber
-      rts
-
-DiskErrorMainMsg:
-  .byte $21, $e6, $08
-  .byte $24, $24, $24, $24, $24, $24, $24, $24
-  .byte $21, $f4, $06
-  .byte $0e, $1b, $1b, $24, $00, $01
-  .byte $00
-
-;disk error message offsets
-;note these actually point to the last byte
-DiskErrorMsgOffsets:
-  .byte $07, $0f, $17, $1f
-
-DiskErrorMsgs:
-;"        "
-  .byte $24, $24, $24, $24, $24, $24, $24, $24
-;"DISK SET"
-  .byte $0d, $12, $1c, $14, $24, $1c, $0e, $1d
-;"BATTERY "
-  .byte $0b, $0a, $1d, $1d, $0e, $1b, $22, $24
-;"A B SIDE"
-  .byte $0a, $24, $0b, $24, $1c, $12, $0d, $0e
-
-DiskErrorHandler:
-  pha
-  and #$0f
-  sta DiskErrorMainMsg+$13  ;write lower nybble of error number as digit
-  pla
-  pha
-  lsr
-  lsr
-  lsr
-  lsr
-  sta DiskErrorMainMsg+$12  ;now write the upper nybble of error number
-  ldy #$03
-  pla
-  cmp #$07                  ;if a/b side error was found, branch
-  beq LoadError
-  dey
-  cmp #$02                  ;if battery low error was found, branch
-  beq LoadError
-  dey
-  cmp #$01                  ;if disk not set error was found, branch
-  beq LoadError
-  dey                       ;otherwise print blank for any other error or no error
-LoadError:
-  ldx DiskErrorMsgOffsets,y ;get offset to error message
-  ldy #$07                  ;use to load error message to vram string
-LELoop:
-  lda DiskErrorMsgs,x
-  sta DiskErrorMainMsg+3,y
-  dex
-  dey
-  bpl LELoop
-  lda #$19
-  sta VRAM_Buffer_AddrCtrl     ;print error message on next NMI
-  jsr MoveAllSpritesOffscreen  ;init the screen
-  jmp InitializeNameTables
 
 GameOverCursorData:
   .byte $5b, $02, $48
@@ -15425,282 +14505,6 @@ ISCont: sta ScoreAndCoinDisplay,y   ;reset score
 
 ;-------------------------------------------------------------------------------------
 
-;jump, fall and friction physics data used with mario and luigi
-;note luigi's higher jump, but with lesser friction
-JumpFrictionData:
-  .byte $20, $20, $1e, $28, $28, $0d, $04
-  .byte $70, $70, $60, $90, $90, $0a, $09
-
-  .byte $e4, $98, $d0
-
-  .byte $18, $18, $18, $22, $22, $0d, $04
-  .byte $42, $42, $3e, $5d, $5d, $0a, $09
-
-  .byte $b4, $68, $a0
-
-LoadPhysicsData:
-  ldx #$60               ;use luigi's offsets and RTS opcode
-  ldy #$21
-  lda SelectedPlayer     ;if selected luigi, branch to continue
-  bne ModifyPhysics
-LoadMarioPhysics:
-  ldx #$0e               ;otherwise use mario's offsets and ASL opcode
-  ldy #$10
-ModifyPhysics:
-  stx PhyOpcode          ;load opcode into friction code to modify it
-  ldx #$10
-MPhyLoop:
-  lda JumpFrictionData,y ;load physics data for the selected player
-  sta JumpMForceData,x
-  dey
-  dex
-  bpl MPhyLoop
-  rts
-
-.ifndef ANN
-;unused bytes
-  .byte $ff, $ff
-
-;-------------------------------------------------------------------------------------
-
-;enemy data used by pipe intro area, warp zone area and exit area
-E_GroundArea10:
-E_GroundArea21:
-E_GroundArea28:
-  .byte $ff
-
-;exit area used in levels 1-2, 3-2, 5-2, 6-2, A-2 and B-2
-L_GroundArea28:
-  .byte $90, $31, $39, $f1, $bf, $37, $33, $e7, $a3, $03, $a7, $03, $cd, $41, $0f, $a6
-  .byte $ed, $47, $fd
-
-;pipe intro area
-L_GroundArea10:
-  .byte $38, $11, $0f, $26, $ad, $40, $3d, $c7, $fd
-
-;warp zone area used in levels 1-2 and 5-2
-L_GroundArea21:
-  .byte $10, $00, $0b, $13, $5b, $14, $6a, $42, $c7, $12, $c6, $42, $1b, $94, $2a, $42
-  .byte $53, $13, $62, $41, $97, $17, $a6, $45, $6e, $81, $8f, $37, $02, $e8, $12, $3a
-  .byte $68, $7a, $de, $0f, $6d, $c5, $fd
-.else
-E_Area11:
-E_Area20:
-E_Area2C:
-E_HArea10:
-E_HArea11:
-.byte $FF
-
-L_Area11:
-L_HArea10:
-.byte $38,$11,$0F,$26,$AD,$40,$3D,$C7,$FD
-
-L_Area20:
-L_HArea11:
-.byte $90,$31,$39,$F1,$5F,$38,$6D,$C1,$AF,$26,$8D,$C7
-L_Area2C:
-.byte $FD
-.endif
-
-
-LoadAreaPointer:
-             jsr FindAreaPointer  ;find it and store it here
-             sta AreaPointer
-GetAreaType: and #%01100000       ;mask out all but d6 and d5
-             asl
-             rol
-             rol
-             rol                  ;make %0xx00000 into %000000xx
-             sta AreaType         ;save 2 MSB as area type
-             rts
-
-FindAreaPointer:
-      ldy WorldNumber        ;load offset from world variable
-      lda WorldAddrOffsets,y
-      clc                    ;add area number used to find data
-      adc AreaNumber
-      tay
-      lda AreaAddrOffsets,y  ;from there we have our area pointer
-      rts
-
-GetAreaDataAddrs:
-            lda AreaPointer          ;use 2 MSB for Y
-            jsr GetAreaType
-            tay
-            lda AreaPointer          ;mask out all but 5 LSB
-            and #%00011111
-            sta AreaAddrsLOffset     ;save as low offset
-            lda EnemyAddrHOffsets,y  ;load base value with 2 altered MSB,
-            clc                      ;then add base value to 5 LSB, result
-            adc AreaAddrsLOffset     ;becomes offset for level data
-            asl
-            tay
-            lda EnemyDataAddrs+1,y   ;use offset to load pointer
-            sta EnemyDataHigh
-            lda EnemyDataAddrs,y
-            sta EnemyDataLow
-            ldy AreaType             ;use area type as offset
-            lda AreaDataHOffsets,y   ;do the same thing but with different base value
-            clc
-            adc AreaAddrsLOffset
-            asl
-            tay
-            lda AreaDataAddrs+1,y    ;use this offset to load another pointer
-            sta AreaDataHigh
-            lda AreaDataAddrs,y
-            sta AreaDataLow
-            ldy #$00                 ;load first byte of header
-            lda (AreaData),y     
-            pha                      ;save it to the stack for now
-            and #%00000111           ;save 3 LSB for foreground scenery or bg color control
-            cmp #$04
-            bcc StoreFore
-            sta BackgroundColorCtrl  ;if 4 or greater, save value here as bg color control
-            lda #$00
-StoreFore:  sta ForegroundScenery    ;if less, save value here as foreground scenery
-            pla                      ;pull byte from stack and push it back
-            pha
-            and #%00111000           ;save player entrance control bits
-            lsr                      ;shift bits over to LSBs
-            lsr
-            lsr
-            sta PlayerEntranceCtrl       ;save value here as player entrance control
-            pla                      ;pull byte again but do not push it back
-            and #%11000000           ;save 2 MSB for game timer setting
-            clc
-            rol                      ;rotate bits over to LSBs
-            rol
-            rol
-            sta GameTimerSetting     ;save value here as game timer setting
-            iny
-            lda (AreaData),y         ;load second byte of header
-            pha                      ;save to stack
-            and #%00001111           ;mask out all but lower nybble
-            sta TerrainControl
-            pla                      ;pull and push byte to copy it to A
-            pha
-            and #%00110000           ;save 2 MSB for background scenery type
-            lsr
-            lsr                      ;shift bits to LSBs
-            lsr
-            lsr
-            sta BackgroundScenery    ;save as background scenery
-            pla           
-            and #%11000000
-            clc
-            rol                      ;rotate bits over to LSBs
-            rol
-            rol
-            cmp #%00000011           ;if set to 3, store here
-            bne StoreStyle           ;and nullify other value
-            sta CloudTypeOverride    ;otherwise store value in other place
-            lda #$00
-StoreStyle: sta AreaStyle
-            lda AreaDataLow          ;increment area data address by 2 bytes
-            clc
-            adc #$02
-            sta AreaDataLow
-            lda AreaDataHigh
-            adc #$00
-            sta AreaDataHigh
-            rts
-
-;-------------------------------------------------------------------------------------
-
-WorldAddrOffsets:
-  .byte World1Areas-AreaAddrOffsets, World2Areas-AreaAddrOffsets
-  .byte World3Areas-AreaAddrOffsets, World4Areas-AreaAddrOffsets
-  .byte World5Areas-AreaAddrOffsets, World6Areas-AreaAddrOffsets
-  .byte World7Areas-AreaAddrOffsets, World8Areas-AreaAddrOffsets
-.ifndef ANN
-  .byte World9Areas-AreaAddrOffsets
-.endif
-
-AreaAddrOffsets:
-.ifdef ANN
-World1Areas: .byte $25, $3B, $C0, $26, $60
-World2Areas: .byte $28, $29, $01, $27, $62
-World3Areas: .byte $24, $35, $20, $63
-World4Areas: .byte $22, $29, $41, $2C, $61
-World5Areas: .byte $2A, $31, $36, $67
-World6Areas: .byte $2E, $23, $2D, $66
-World7Areas: .byte $33, $29, $03, $37, $64
-World8Areas: .byte $30, $32, $21, $65
-.else
-World1Areas: .byte $20, $29, $40, $21, $60
-World2Areas: .byte $22, $23, $24, $61
-World3Areas: .byte $25, $29, $00, $26, $62
-World4Areas: .byte $27, $28, $2a, $63
-World5Areas: .byte $2b, $29, $43, $2c, $64
-World6Areas: .byte $2d, $29, $01, $2e, $65
-World7Areas: .byte $2f, $30, $31, $66
-World8Areas: .byte $32, $35, $36, $67
-World9Areas: .byte $38, $06, $68, $07
-.endif
-
-AreaDataOfsLoopback:
-.ifdef ANN
-  .byte $12, $36, $0E, $0E, $0E, $32, $32, $32, $0C, $54 
-.else
-  .byte $0c, $0c, $42, $42, $10, $10, $30, $30, $06, $0c, $54, $06
-.endif
-
-EnemyAddrHOffsets:
-.ifdef ANN
-  .byte $28, $08, $24, $00
-.else
-  .byte $2c, $0a, $27, $00
-.endif
-
-EnemyDataAddrs:
-.ifdef ANN
-.addr E_Area00, E_Area01, E_Area02, E_Area03, E_Area04, E_Area05, E_Area06, E_Area07
-.addr E_Area08, E_Area09, E_Area0A, E_Area0B, E_Area0C, E_Area0D, E_Area0E, E_Area0F
-.addr E_Area10, E_Area11, E_Area12, E_Area13, E_Area14, E_Area15, E_Area16, E_Area17
-.addr E_Area18, E_Area19, E_Area1A, E_Area1B, E_Area1C, E_Area1D, E_Area1E, E_Area1F
-.addr E_Area20, E_Area21, E_Area22, E_Area23, E_Area24, E_Area25, E_Area26, E_Area27
-.addr E_Area28, E_Area29, E_Area2A, E_Area2B, E_Area11
-.else
-  .word E_CastleArea1, E_CastleArea2, E_CastleArea3, E_CastleArea4, E_CastleArea5, E_CastleArea6
-  .word E_CastleArea7, E_CastleArea8, E_CastleArea9, E_CastleArea10, E_GroundArea1, E_GroundArea2
-  .word E_GroundArea3, E_GroundArea4, E_GroundArea5, E_GroundArea6, E_GroundArea7, E_GroundArea8
-  .word E_GroundArea9, E_GroundArea10, E_GroundArea11, E_GroundArea12, E_GroundArea13, E_GroundArea14
-  .word E_GroundArea15, E_GroundArea16, E_GroundArea17, E_GroundArea18, E_GroundArea19, E_GroundArea20
-  .word E_GroundArea21, E_GroundArea22, E_GroundArea23, E_GroundArea24, E_GroundArea25, E_GroundArea26
-  .word E_GroundArea27, E_GroundArea28, E_GroundArea29, E_UndergroundArea1, E_UndergroundArea2
-  .word E_UndergroundArea3, E_UndergroundArea4, E_UndergroundArea5, E_WaterArea1, E_WaterArea2
-  .word E_WaterArea3, E_WaterArea4, E_WaterArea5, E_WaterArea6, E_WaterArea7, E_WaterArea8
-.endif
-
-AreaDataHOffsets:
-.ifdef ANN
-  .byte $28, $08, $24, $00
-.else
-  .byte $2c, $0a, $27, $00
-.endif
-
-AreaDataAddrs:
-.ifdef ANN
-.addr L_Area00, L_Area01, L_Area02, L_Area03, L_Area04, L_Area05, L_Area06, L_Area07
-.addr L_Area08, L_Area09, L_Area0A, L_Area0B, L_Area0C, L_Area0D, L_Area0E, L_Area0F
-.addr L_Area10, L_Area11, L_Area12, L_Area13, L_Area14, L_Area15, L_Area16, L_Area17
-.addr L_Area18, L_Area19, L_Area1A, L_Area1B, L_Area1C, L_Area1D, L_Area1E, L_Area1F
-.addr L_Area20, L_Area21, L_Area22, L_Area23, L_Area24, L_Area25, L_Area26, L_Area27
-.addr L_Area28, L_Area29, L_Area2A, L_Area2B, L_Area2C
-.else
-  .word L_CastleArea1, L_CastleArea2, L_CastleArea3, L_CastleArea4, L_CastleArea5, L_CastleArea6
-  .word L_CastleArea7, L_CastleArea8, L_CastleArea9, L_CastleArea10, L_GroundArea1, L_GroundArea2
-  .word L_GroundArea3, L_GroundArea4, L_GroundArea5, L_GroundArea6, L_GroundArea7, L_GroundArea8
-  .word L_GroundArea9, L_GroundArea10, L_GroundArea11, L_GroundArea12, L_GroundArea13, L_GroundArea14
-  .word L_GroundArea15, L_GroundArea16, L_GroundArea17, L_GroundArea18, L_GroundArea19, L_GroundArea20
-  .word L_GroundArea21, L_GroundArea22, L_GroundArea23, L_GroundArea24, L_GroundArea25, L_GroundArea26
-  .word L_GroundArea27, L_GroundArea28, L_GroundArea29, L_UndergroundArea1, L_UndergroundArea2
-  .word L_UndergroundArea3, L_UndergroundArea4, L_UndergroundArea5, L_WaterArea1, L_WaterArea2
-  .word L_WaterArea3, L_WaterArea4, L_WaterArea5, L_WaterArea6, L_WaterArea7, L_WaterArea8
-;some unused bytes
-  .byte $ff, $ff
-.endif
-
 GameMenuRoutine:
               lda SavedJoypadBits         ;check to see if the player pressed start
               and #Start_Button
@@ -15709,7 +14513,6 @@ GameMenuRoutine:
 .ifndef ANN
               sta CompletedWorlds
 .endif
-              sta DiskIOTask
               sta HardWorldFlag
               lda GamesBeatenCount        ;check to see if player has beaten
               cmp #$08                    ;the game at least 8 times
@@ -15760,38 +14563,36 @@ StartGame:
               lda DemoTimer
               beq ResetTitle
               inc OperMode_Task
-              jsr PatchPlayerNamePal      ;patch data over based on selected player
               lda #$00
               sta WorldNumber
               lda #$00
               sta LevelNumber
               lda #$00
               sta AreaNumber
+              sta IRQUpdateFlag
               ldx #$0b
 InitScore:    sta ScoreAndCoinDisplay,x   ;clear player score and coin display
               dex
               bpl InitScore
 ExitMenu:     rts
 
-MenuCursorTemplate:
-  .byte $22, $4b, $83
-  .byte $ce, $24, $24
-  .byte $00
-
-MenuCursorTiles:
-  .byte $ce, $24, $ce
+MushroomIconData:
+      .byte $07, $22, $4B, $83, $ce, $24, $24, $00
 
 DrawMenuCursor:
-  lda #$1c                 ;set up VRAM address controller to draw cursor
-  sta VRAM_Buffer_AddrCtrl
-
-SetupMenuCursor:
-  ldy SelectedPlayer       ;write blank and mushroom icon to template
-  lda MenuCursorTiles,y    ;in the order based on selected player
-  sta MenuCursorTemplate+3
-  lda MenuCursorTiles+1,y  ;e.g. if mario, write mushroom, then blank
-  sta MenuCursorTemplate+5 ;and if luigi, write blank, then mushroom
-  rts
+DrawMushroomIcon:
+              ldy #$07                ;read eight bytes to be read by transfer routine
+IconDataRead: lda MushroomIconData,y  ;note that the default position is set for a
+              sta VRAM_Buffer1-1,y    ;1-player game
+              dey
+              bpl IconDataRead
+              lda SelectedPlayer      ;check player
+              beq ExitIcon            ;if player 1, exit
+              lda #$24                ;otherwise, load blank tile in mario position
+              sta VRAM_Buffer1+3
+              lda #$ce                ;and shroom in luigi position
+              sta VRAM_Buffer1+5
+ExitIcon:     rts
 
 .ifdef ANN
 DemoActionData:
@@ -15855,8 +14656,6 @@ InitializeGame:
 .endif
             sta HardWorldFlag
             sta SelectedPlayer
-            jsr PatchPlayerNamePal   ;set up mario's/luigi's name and palette
-            jsr SetupMenuCursor      ;put menu cursor next to mario's name
 .ifdef ANN
             ldy #$47                 ;set up offset in the title screen tiles
             lda #$0a                 ;set up counter to print up to 10 stars per row
@@ -15865,12 +14664,24 @@ InitializeGame:
             lda #$0c                 ;set up counter to print up to 12 stars per row
 .endif
             sta $00
-            ldx #$00                 ;init star counter
+
+            ldx #0
+:           lda TitleScreenGfxData,x
+            sta TitleScreenGfxDataMod,x
+            inx
+            bne :-
+:           lda TitleScreenGfxData+$100,x
+            sta TitleScreenGfxDataMod+$100,x
+            inx
+            cpx #TitleScreenGfxDataEnd-TitleScreenGfxData-$100+1
+            bne :-
+
+            ldx #0
 PrintStars: lda #$26                 ;print blank by default
             cpx GamesBeatenCount     ;check star counter against games beaten
             bcs PrintToTS            ;if counted up to games beaten, print the blank
             lda #$f1                 ;otherwise print a star for a beaten game
-PrintToTS:  sta TitleScreenGfxData,y ;print to title screen
+PrintToTS:  sta TitleScreenGfxDataMod,y ;print to title screen
             iny
             dec $00                  ;decrement until done printing a row
             bne NextStarR
@@ -15896,7 +14707,7 @@ ClrSndLoop: sta SoundMemory,y        ;clear out memory used
 DemoReset:
             lda #$18             ;set demo timer
             sta DemoTimer
-            jsr LoadAreaPointer
+            BankJSR AreaBank, LoadAreaPointer
             jmp InitializeArea
 
 PrimaryGameSetup:
@@ -15906,45 +14717,6 @@ PrimaryGameSetup:
       lda #$02
       sta NumberofLives           ;give each player three lives
       jmp SecondaryGameSetup
-
-;-------------------------------------------------------------------------------------
-
-PlayerNameData:
-  .byte $16, $0a, $1b, $12, $18 ;"MARIO"
-  .byte $15, $1e, $12, $10, $12 ;"LUIGI"
-
-PlayerPaletteData:
-  .byte $22, $16, $27, $18
-  .byte $22, $30, $27, $19
-
-PlayerNameOffsets:
-  .byte $04, $09                       ;note that offsets point to last byte
-
-PatchPlayerNamePal:
-           ldy SelectedPlayer        ;get offset based on selected player
-           lda PlayerNameOffsets,y
-           pha
-           iny
-           sty $00                   ;save player + 1 temporarily (mario = 1, luigi = 2)
-           tay
-           ldx #$04
-NamePatch: lda PlayerNameData,y      ;get name of selected player
-           sta TopStatusBarLine+3,x  ;patch to top status bar and victory message
-           sta ThankYouMessage+$d,x
-           dey
-           dex
-           bpl NamePatch
-           pla                       ;subtract player + 1 from offset loaded earlier
-           sec                       ;to get proper offset for palette loading
-           sbc $00
-           tay
-           ldx #$03
-PalPatch:  lda PlayerPaletteData,y   ;overwrite palette with the appropriate one
-           sta PlayerColors,x
-           dey
-           dex
-           bpl PalPatch
-           rts
 
 ;-------------------------------------------------------------------------------------
 
@@ -16031,1976 +14803,760 @@ TitleScreenGfxDataEnd:
 
 ;-------------------------------------------------------------------------------------
 
-;GAME LEVELS DATA
-.ifdef ANN
-E_Area00:
-.byte $ea,$9d,$0f,$03,$16,$1d,$c6,$1d,$36,$9d,$c9,$1d,$49,$9d,$84,$1b
-.byte $c9,$1d,$88,$95,$0f,$08,$78,$2d,$a6,$28,$90,$b5,$ff
-E_Area01:
-.byte $0f,$03,$56,$1b,$c9,$1b,$0f,$07,$36,$1b,$aa,$1b,$48,$95,$0f,$0a
-.byte $2a,$1b,$5b,$0c,$78,$2d,$90,$b5,$ff
-E_Area02:
-.byte $0b,$8c,$77,$1b,$eb,$0c,$0f,$03,$19,$1d,$75,$1d,$d9,$1d,$99,$9d
-.byte $26,$9d,$5a,$2b,$8a,$2c,$ca,$1b,$20,$95,$0f,$08,$78,$2d,$a6,$28
-.byte $90,$b5,$ff
-E_Area03:
-.byte $0b,$8c,$3b,$1d,$8b,$1d,$ab,$0c,$db,$1d,$b5,$9b,$65,$9d,$6b,$1b
-.byte $0b,$9b,$05,$9d,$0b,$1b,$8b,$0c,$1b,$8c,$70,$15,$7b,$0c,$db,$0c
-.byte $0f,$08,$78,$2d,$a6,$28,$90,$b5,$ff
-E_Area08:
-.byte $a5,$86,$e4,$28,$18,$a8,$45,$83,$69,$03,$c6,$29,$9b,$83,$16,$a9
-.byte $88,$29,$7b,$a8,$24,$8f,$c8,$03,$e8,$03,$46,$a8,$85,$24,$c8,$24
-.byte $ff
-E_Area0A:
-.byte $2e,$c2,$66,$e2,$11,$0f,$07,$02,$11,$0f,$0c,$12,$11,$18,$10,$ff
-E_Area0C:
-.byte $9b,$8e,$ca,$0e,$ee,$42,$44,$5b,$86,$80,$b8,$1b,$80,$50,$ba,$10
-.byte $b7,$5b,$00,$17,$85,$4b,$05,$fe,$34,$40,$b7,$86,$c6,$06,$5b,$80
-.byte $83,$00,$d0,$38,$5b,$8e,$8a,$0e,$a6,$00,$bb,$0e,$c5,$80,$f3,$00
-.byte $ff
-E_Area0D:
-.byte $1e,$c2,$00,$6b,$06,$8b,$86,$63,$b7,$0f,$05,$03,$06,$23,$06,$4b
-.byte $b7,$bb,$00,$5b,$b7,$fb,$37,$3b,$b7,$0f,$0b,$1b,$37,$ff
-E_Area0E:
-.byte $e3,$83,$c2,$86,$e2,$06,$76,$a5,$a3,$8f,$03,$86,$68,$28,$e9,$28
-.byte $e5,$83,$24,$8f,$36,$a8,$5b,$03,$ff
-E_Area0F:
-.byte $b8,$80,$0f,$03,$08,$0e,$ff
-E_Area10:
-.byte $85,$86,$0b,$80,$1b,$00,$db,$37,$77,$80,$eb,$37,$fe,$2b,$20,$2b
-.byte $80,$7b,$38,$ab,$b8,$77,$86,$fe,$42,$20,$49,$86,$8b,$06,$53,$8f
-.byte $9b,$03,$07,$90,$5b,$03,$5b,$b7,$9b,$0e,$bb,$0e,$9b,$80,$ff
-E_Area13:
-.byte $0a,$aa,$0e,$28,$2a,$ff
-E_Area14:
-.byte $c7,$83,$d7,$03,$42,$8f,$7a,$03,$05,$a4,$78,$24,$a6,$25,$e4,$25
-.byte $4b,$83,$e3,$03,$06,$a9,$89,$29,$b6,$29,$09,$a9,$66,$29,$c9,$29
-.byte $0f,$08,$85,$25
-E_Area17:
-.byte $ff
-E_Area1C:
-.byte $0a,$aa,$0e,$24,$4a,$ff
-E_Area1D:
-.byte $1b,$80,$bb,$38,$4b,$bc,$eb,$3b,$0f,$04,$2b,$00,$ab,$38,$eb,$00
-.byte $cb,$8e,$fb,$80,$9b,$b8,$6b,$80,$fb,$3c,$9b,$bb,$5b,$bc,$fb,$00
-.byte $6b,$b8,$fb,$38
-E_Area23:
-.byte $ff
-E_Area24:
-.byte $0b,$86,$1a,$06,$db,$06,$de,$c2,$02,$f0,$3b,$bb,$80,$eb,$06,$0b
-.byte $86,$93,$06,$f0,$39,$0f,$06,$60,$b8,$1b,$86,$a0,$b9,$b7,$27,$bd
-.byte $27,$2b,$83,$a1,$26,$a9,$26,$ee,$25,$0b,$27,$b4,$ff
-E_Area25:
-.byte $f7,$80,$1e,$af,$60,$e0,$3a,$a5,$a7,$db,$80,$3b,$82,$8b,$02,$fe
-.byte $42,$68,$70,$bb,$25,$a7,$2c,$27,$b2,$26,$b9,$26,$9b,$80,$a8,$82
-.byte $b5,$27,$bc,$27,$bb,$83,$3b,$82,$87,$34,$ee,$38,$61,$ff
-E_Area26:
-.byte $1e,$a5,$0a,$2e,$28,$27,$0f,$03,$1e,$40,$07,$0f,$05,$1e,$24,$44
-.byte $0f,$07,$1e,$22,$6a,$0f,$09,$1e,$41,$68,$ff
-E_Area29:
-.byte $2e,$b8,$21,$2e,$38,$41,$6b,$07,$97,$47,$e9,$87,$7a,$87,$0f,$05
-.byte $78,$07,$38,$87,$e3,$07,$9b,$87,$ff
-L_Area00:
-.byte $9b,$07,$05,$32,$06,$33,$07,$34,$ce,$03,$dc,$51,$ee,$07,$7e,$86
-.byte $9e,$0a,$ce,$06,$e4,$00,$e8,$0b,$fe,$0a,$2e,$89,$4e,$0b,$14,$8b
-.byte $c4,$0b,$34,$8b,$7e,$06,$c7,$0b,$47,$8b,$81,$60,$82,$0b,$c7,$0b
-.byte $0e,$87,$7e,$02,$a7,$02,$b3,$02,$d7,$02,$e3,$02,$07,$82,$13,$02
-.byte $3e,$06,$7e,$02,$ae,$07,$fe,$0a,$0d,$c4,$cd,$43,$ce,$09,$de,$0b
-.byte $dd,$42,$fe,$02,$5d,$c7,$fd
-L_Area01:
-.byte $5b,$07,$05,$32,$06,$33,$07,$34,$5e,$0a,$68,$64,$98,$64,$a8,$64
-.byte $ce,$06,$fe,$02,$0d,$01,$1e,$0e,$7e,$02,$94,$63,$b4,$63,$d4,$63
-.byte $f4,$63,$14,$e3,$2e,$0e,$5e,$02,$64,$35,$88,$72,$be,$0e,$0d,$04
-.byte $ae,$02,$ce,$08,$cd,$4b,$fe,$02,$0d,$05,$68,$31,$7e,$0a,$96,$31
-.byte $a9,$63,$a8,$33,$d5,$30,$ee,$02,$e6,$62,$f4,$61,$04,$b0,$54,$32
-.byte $78,$02,$93,$64,$98,$36,$a4,$31,$e4,$31,$04,$bf,$08,$3f,$04,$bf
-.byte $08,$3f,$cd,$4b,$04,$e3,$0e,$03,$2e,$01,$7e,$06,$be,$02,$de,$06
-.byte $fe,$0a,$0d,$c4,$cd,$43,$ce,$09,$de,$0b,$dd,$42,$fe,$02,$5d,$c7
-.byte $fd
-L_Area02:
-.byte $9b,$07,$05,$32,$06,$33,$07,$34,$fe,$00,$27,$b1,$65,$32,$75,$0b
-.byte $71,$00,$b7,$31,$08,$e4,$18,$64,$1e,$04,$57,$3b,$17,$8b,$27,$3a
-.byte $73,$0b,$d7,$0b,$e7,$3a,$97,$8b,$fe,$08,$24,$8b,$2e,$00,$3e,$40
-.byte $38,$64,$6f,$00,$9f,$00,$be,$43,$c8,$0b,$c9,$63,$ce,$07,$fe,$07
-.byte $2e,$81,$66,$42,$6a,$42,$79,$08,$be,$00,$c8,$64,$f8,$64,$08,$e4
-.byte $2e,$07,$7e,$03,$9e,$07,$be,$03,$de,$07,$fe,$0a,$03,$88,$0d,$44
-.byte $13,$24,$cd,$43,$ce,$09,$dd,$42,$de,$0b,$fe,$02,$5d,$c7,$fd
-L_Area03:
-.byte $9b,$07,$05,$32,$06,$33,$07,$34,$fe,$06,$0c,$81,$39,$0b,$5c,$01
-.byte $89,$0b,$ac,$01,$d9,$0b,$fc,$01,$2e,$83,$a6,$42,$a7,$01,$b3,$0b
-.byte $b7,$00,$c7,$01,$de,$0a,$fe,$02,$4e,$83,$5a,$32,$63,$0b,$69,$0b
-.byte $7e,$02,$ee,$03,$fa,$32,$09,$8b,$1e,$02,$ee,$03,$fa,$32,$03,$8b
-.byte $09,$0b,$14,$42,$1e,$02,$7e,$0a,$9e,$07,$fe,$0a,$2e,$86,$5e,$0a
-.byte $8e,$06,$be,$0a,$ee,$07,$fe,$8a,$0d,$c4,$41,$52,$51,$52,$cd,$43
-.byte $ce,$09,$de,$0b,$dd,$42,$fe,$02,$5d,$c7,$fd
-L_Area08:
-.byte $94,$11,$0f,$26,$fe,$10,$28,$94,$65,$15,$eb,$12,$fa,$41,$4a,$96
-.byte $54,$40,$a4,$42,$b7,$13,$e9,$19,$f5,$15,$11,$80,$47,$42,$71,$13
-.byte $15,$92,$1b,$1f,$24,$40,$55,$12,$64,$40,$95,$12,$a4,$40,$d2,$12
-.byte $e1,$40,$13,$c0,$49,$13,$83,$40,$a3,$40,$17,$92,$83,$13,$92,$41
-.byte $b9,$14,$c5,$12,$c8,$40,$d4,$40,$4b,$92,$78,$1b,$9c,$94,$9f,$11
-.byte $df,$14,$fe,$11,$7d,$c1,$9e,$42,$cf,$20,$9d,$c7,$fd
-L_Area0A:
-.byte $52,$21,$0f,$20,$6e,$40,$58,$f2,$93,$00,$97,$01,$0c,$81,$97,$40
-.byte $a6,$41,$c7,$40,$0d,$04,$03,$01,$07,$01,$23,$01,$27,$01,$ec,$03
-.byte $ac,$f3,$c3,$03,$78,$e2,$94,$43,$47,$f3,$74,$43,$47,$fb,$74,$43
-.byte $2c,$f1,$4c,$63,$47,$00,$57,$21,$5c,$01,$7c,$72,$39,$f1,$ec,$02
-.byte $4c,$81,$ec,$01,$0d,$0d,$0f,$38,$c7,$08,$ed,$4a,$1d,$c1,$5f,$26
-.byte $3d,$c7,$fd
-L_Area0C:
-.byte $52,$31,$0f,$20,$6e,$66,$07,$81,$36,$01,$66,$00,$a7,$21,$c7,$08
-.byte $c9,$20,$ec,$01,$08,$f2,$67,$7b,$98,$f2,$39,$f1,$9f,$33,$dc,$27
-.byte $dc,$57,$23,$83,$57,$63,$6c,$51,$87,$63,$99,$61,$a3,$07,$b3,$21
-.byte $77,$f3,$f3,$29,$f7,$2a,$13,$81,$53,$00,$e9,$0c,$0c,$83,$13,$21
-.byte $16,$22,$33,$06,$8f,$35,$ec,$01,$63,$a2,$67,$20,$73,$01,$77,$01
-.byte $87,$20,$b3,$22,$b7,$20,$c3,$00,$c7,$01,$d7,$20,$67,$a0,$77,$08
-.byte $87,$22,$e8,$62,$f5,$65,$1c,$82,$7f,$38,$8d,$c1,$cf,$26,$ad,$c7
-.byte $fd
-L_Area0D:
-.byte $54,$21,$07,$81,$47,$24,$57,$01,$63,$00,$77,$01,$c9,$71,$68,$f2
-.byte $e7,$73,$97,$fb,$06,$83,$5c,$01,$d7,$22,$03,$80,$13,$26,$6c,$02
-.byte $b3,$22,$e3,$01,$e7,$08,$47,$a1,$a7,$01,$d3,$07,$d7,$01,$07,$80
-.byte $67,$20,$93,$22,$03,$a3,$1c,$61,$17,$21,$6f,$33,$c7,$63,$d8,$62
-.byte $e9,$61,$fa,$60,$4f,$b3,$87,$63,$9c,$01,$b7,$63,$c8,$62,$d9,$61
-.byte $ea,$60,$39,$f1,$87,$21,$a7,$01,$b7,$20,$39,$f1,$5f,$38,$6d,$c1
-.byte $af,$26,$8d,$c7,$fd
-L_Area0E:
-.byte $94,$11,$0f,$26,$fe,$10,$2a,$93,$87,$17,$a3,$14,$b2,$42,$0a,$92
-.byte $36,$14,$50,$41,$82,$16,$2b,$93,$24,$41,$bb,$14,$b8,$00,$c3,$13
-.byte $d2,$41,$1b,$94,$67,$12,$c4,$15,$53,$c1,$d2,$41,$12,$c1,$29,$13
-.byte $85,$17,$1b,$92,$1a,$42,$47,$13,$83,$41,$a7,$13,$0e,$91,$a7,$63
-.byte $b7,$63,$c5,$65,$d5,$65,$dd,$4a,$e3,$67,$f3,$67,$8d,$c1,$ae,$42
-.byte $df,$20,$ad,$c7,$fd
-L_Area0F:
-.byte $90,$11,$0f,$26,$6e,$10,$8b,$17,$af,$32,$d8,$62,$e8,$62,$fc,$3f
-.byte $ad,$c8,$f8,$64,$0c,$be,$43,$43,$f8,$64,$0c,$bf,$f8,$64,$48,$e4
-.byte $5c,$39,$83,$40,$92,$41,$b3,$40,$f8,$64,$48,$e4,$5c,$39,$f8,$64
-.byte $13,$c2,$37,$65,$4c,$24,$63,$00,$97,$65,$c3,$42,$0b,$97,$ac,$32
-.byte $f8,$64,$0c,$be,$53,$45,$9d,$48,$f8,$64,$2a,$e2,$3c,$47,$56,$43
-.byte $ba,$62,$f8,$64,$0c,$b7,$88,$64,$bc,$31,$d4,$45,$fc,$31,$3c,$b1
-.byte $78,$64,$8c,$38,$0b,$9c,$1a,$33,$18,$61,$28,$61,$39,$60,$5d,$4a
-.byte $ee,$11,$0f,$b8,$1d,$c1,$3e,$42,$6f,$20,$3d,$c7,$fd
-L_Area10:
-.byte $52,$31,$0f,$20,$6e,$40,$f7,$20,$07,$85,$17,$20,$4f,$34,$c3,$03
-.byte $c7,$02,$d3,$22,$27,$e3,$39,$61,$e7,$73,$5c,$f4,$53,$00,$6c,$63
-.byte $47,$a0,$53,$06,$63,$22,$a7,$73,$fc,$73,$13,$a1,$33,$07,$43,$21
-.byte $5c,$72,$c3,$23,$cc,$03,$77,$fb,$39,$f1,$a7,$73,$d3,$05,$e8,$72
-.byte $e3,$22,$26,$f4,$bc,$02,$00,$89,$09,$0c,$17,$88,$43,$24,$a7,$01
-.byte $c3,$05,$08,$f2,$97,$31,$a3,$02,$e1,$69,$f1,$69,$8d,$c1,$cf,$26
-.byte $ad,$c7,$fd
-L_Area13:
-.byte $00,$c1,$4c,$00,$f4,$4f,$0d,$02,$02,$42,$43,$4f,$52,$c2,$de,$00
-.byte $5a,$c2,$4d,$c7,$fd
-L_Area14:
-.byte $90,$51,$0f,$26,$ee,$10,$0b,$94,$33,$14,$42,$42,$77,$16,$86,$44
-.byte $02,$92,$4a,$16,$69,$42,$73,$14,$b0,$00,$c7,$12,$05,$c0,$1c,$17
-.byte $1f,$11,$36,$12,$8f,$14,$91,$40,$1b,$94,$35,$12,$34,$42,$60,$42
-.byte $61,$12,$87,$12,$96,$40,$a3,$14,$47,$92,$05,$c0,$39,$12,$82,$40
-.byte $98,$12,$16,$c4,$17,$14,$54,$12,$9b,$16,$28,$94,$ce,$01,$3d,$c1
-.byte $5e,$42,$8f,$20,$5d,$c7,$fd
-L_Area17:
-.byte $10,$51,$4c,$00,$c7,$12,$c6,$42,$03,$92,$02,$42,$29,$12,$63,$12
-.byte $62,$42,$69,$14,$a5,$12,$a4,$42,$e2,$14,$e1,$44,$f8,$16,$37,$c1
-.byte $8f,$38,$02,$bb,$28,$7a,$68,$7a,$a8,$7a,$e0,$6a,$f0,$6a,$6d,$c5
-.byte $fd
-L_Area1C:
-.byte $06,$c1,$4c,$00,$f4,$4f,$0d,$02,$06,$20,$24,$4f,$35,$a0,$36,$20
-.byte $53,$46,$d5,$20,$d6,$20,$34,$a1,$73,$49,$74,$20,$94,$20,$b4,$20
-.byte $d4,$20,$f4,$20,$2e,$80,$59,$42,$4d,$c7,$fd
-L_Area1D:
-.byte $96,$31,$0f,$26,$0d,$03,$1a,$60,$77,$42,$c4,$00,$c8,$62,$b9,$e1
-.byte $d3,$07,$d7,$08,$f9,$61,$0c,$81,$4e,$b1,$8e,$b1,$aa,$30,$bc,$01
-.byte $e4,$50,$e9,$61,$0c,$81,$0d,$0a,$84,$43,$98,$72,$0d,$0c,$0f,$38
-.byte $1d,$c1,$5f,$26,$3d,$c7,$fd
-L_Area23:
-.byte $3c,$11,$0f,$26,$ad,$40,$3d,$c7,$fd
-L_Area24:
-.byte $48,$0f,$0e,$01,$5e,$02,$a7,$00,$bc,$73,$1a,$e0,$39,$61,$58,$62
-.byte $77,$63,$97,$63,$b8,$62,$d6,$08,$f8,$62,$19,$e1,$75,$52,$86,$40
-.byte $87,$07,$95,$52,$93,$43,$a5,$21,$c5,$52,$d6,$40,$d7,$20,$e5,$52
-.byte $3e,$8d,$5e,$03,$67,$52,$77,$52,$7e,$02,$9e,$03,$a6,$43,$a7,$23
-.byte $de,$05,$fe,$02,$1e,$83,$33,$54,$46,$40,$47,$21,$56,$05,$5e,$02
-.byte $83,$54,$93,$54,$96,$08,$90,$09,$be,$03,$c7,$23,$fe,$02,$0c,$82
-.byte $43,$45,$45,$24,$46,$24,$90,$05,$95,$51,$78,$fa,$d7,$73,$39,$f1
-.byte $8c,$01,$a8,$52,$b8,$52,$cc,$01,$5f,$b3,$97,$63,$9e,$00,$0e,$81
-.byte $16,$24,$66,$05,$8e,$00,$fe,$01,$08,$d2,$0e,$06,$6f,$47,$9e,$0f
-.byte $0e,$82,$2d,$47,$28,$7a,$68,$7a,$a8,$7a,$ae,$01,$de,$0f,$6d,$c5
-.byte $fd
-L_Area25:
-.byte $48,$0f,$0e,$01,$5e,$02,$bc,$01,$fc,$01,$2c,$82,$41,$52,$4e,$04
-.byte $67,$25,$68,$24,$69,$21,$89,$08,$99,$21,$ba,$42,$c7,$05,$de,$0b
-.byte $b2,$88,$fe,$02,$2c,$e1,$2c,$71,$67,$01,$77,$00,$87,$01,$8e,$00
-.byte $ee,$01,$f6,$02,$03,$86,$05,$02,$13,$21,$16,$02,$27,$02,$2e,$02
-.byte $88,$72,$c7,$20,$d7,$08,$e4,$76,$07,$a0,$17,$07,$48,$7a,$76,$20
-.byte $98,$72,$79,$e1,$88,$62,$9c,$01,$b7,$73,$dc,$01,$f8,$62,$fe,$01
-.byte $08,$e2,$0e,$00,$6e,$02,$73,$20,$77,$23,$83,$05,$93,$20,$ae,$00
-.byte $fe,$0a,$0e,$82,$39,$71,$a8,$72,$e7,$73,$0c,$81,$8f,$32,$ae,$00
-.byte $fe,$04,$04,$d1,$17,$05,$26,$49,$27,$29,$df,$33,$fe,$02,$44,$f6
-.byte $7c,$01,$8e,$06,$bf,$47,$ee,$0f,$4d,$c7,$0e,$82,$68,$7a,$ae,$01
-.byte $de,$0f,$6d,$c5,$fd
-L_Area26:
-.byte $48,$01,$0e,$01,$00,$5a,$3e,$06,$45,$46,$47,$46,$53,$44,$ae,$01
-.byte $df,$4a,$4d,$c7,$0e,$81,$00,$5a,$2e,$04,$37,$28,$3a,$48,$46,$47
-.byte $c7,$08,$ce,$0f,$df,$4a,$4d,$c7,$0e,$81,$00,$5a,$33,$53,$43,$51
-.byte $46,$40,$47,$50,$53,$05,$55,$40,$56,$50,$62,$43,$64,$40,$65,$50
-.byte $71,$41,$73,$51,$83,$51,$94,$40,$95,$50,$a3,$50,$a5,$40,$a6,$50
-.byte $b3,$51,$b6,$40,$b7,$50,$c3,$53,$df,$4a,$4d,$c7,$0e,$81,$00,$5a
-.byte $2e,$02,$36,$47,$37,$52,$3a,$49,$47,$25,$a7,$52,$d7,$05,$df,$4a
-.byte $4d,$c7,$0e,$81,$00,$5a,$3e,$02,$44,$51,$53,$44,$54,$44,$55,$24
-.byte $a1,$54,$ae,$01,$b4,$21,$df,$4a,$e5,$08,$4d,$c7,$fd
-L_Area29:
-.byte $41,$01,$b8,$52,$ea,$41,$27,$b2,$b3,$42,$16,$d4,$4a,$42,$a5,$51
-.byte $a7,$31,$27,$d3,$08,$e2,$16,$64,$2c,$04,$38,$42,$76,$64,$88,$62
-.byte $de,$07,$fe,$01,$0d,$c9,$23,$32,$31,$51,$98,$52,$0d,$c9,$59,$42
-.byte $63,$53,$67,$31,$14,$c2,$36,$31,$87,$53,$17,$e3,$29,$61,$30,$62
-.byte $3c,$08,$42,$37,$59,$40,$6a,$42,$99,$40,$c9,$61,$d7,$63,$58,$d2
-.byte $c3,$67,$d3,$31,$dc,$06,$f7,$42,$fa,$42,$23,$b1,$43,$67,$c3,$34
-.byte $c7,$34,$d1,$51,$43,$b3,$47,$33,$9a,$30,$a9,$61,$b8,$62,$be,$0b
-.byte $c4,$31,$d5,$0a,$de,$0f,$0d,$ca,$7d,$47,$fd
+;SMB2J DISASSEMBLY (SM2DATA2 portion)
 
-MRetainerCHRWorld1:
-.byte $00,$03,$1f,$3f,$3f,$7f,$7f,$7f
-.byte $00,$03,$1f,$3f,$3f,$7f,$7f,$7f
-.byte $7f,$3f,$3b,$33,$7f,$7e,$7f,$7f
-.byte $5f,$18,$0f,$3f,$70,$53,$19,$1c
-.byte $00,$00,$03,$34,$79,$7f,$3f,$1c
-.byte $3f,$3f,$0f,$0f,$07,$03,$03,$00
-.byte $e0,$f0,$f8,$f8,$fc,$fe,$fe,$fe
-.byte $e0,$f0,$f8,$f8,$fc,$fe,$fe,$fe
-.byte $fe,$fe,$ee,$e6,$ff,$3f,$ff,$ff
-.byte $8c,$04,$70,$7e,$07,$e5,$cc,$1c
-.byte $80,$00,$e0,$06,$cf,$ff,$fe,$1c
-.byte $7e,$fe,$f8,$f8,$f0,$e0,$e0,$00
+;-------------------------------------------------------------------------------------------------
+;$06 - used to store vertical length of pipe
+;$07 - starts with adder from area parser, used to store row offset
 
-MRetainerCHRWorld2:
-.byte $1f,$3f,$3f,$1f,$1f,$1f,$1f,$1f
-.byte $1f,$3f,$30,$04,$03,$02,$00,$00
-.byte $1f,$1f,$1f,$1f,$1e,$0f,$0f,$07
-.byte $00,$01,$00,$01,$00,$01,$00,$00
-.byte $74,$42,$e3,$e1,$00,$60,$38,$0c
-.byte $0e,$03,$03,$01,$0f,$e8,$78,$3c
-.byte $00,$f8,$fc,$fc,$fc,$fc,$fc,$fc
-.byte $00,$f8,$1c,$4c,$8c,$84,$04,$04
-.byte $f8,$f8,$f8,$f8,$f8,$f0,$f0,$e0
-.byte $00,$00,$00,$00,$00,$00,$00,$00
-.byte $2e,$62,$c7,$c7,$00,$18,$0c,$06
-.byte $70,$e0,$c0,$c0,$c0,$dc,$fe,$07
+UpsideDownPipe_High:
+       lda #$01                     ;start at second row
+       pha
+       bne UDP
+UpsideDownPipe_Low:
+       lda #$04                     ;start at fifth row
+       pha
+UDP:   jsr GetPipeHeight            ;get pipe height from object byte
+       pla
+       sta $07                      ;save buffer offset temporarily
+       tya
+       pha                          ;save pipe height temporarily
+       ldy AreaObjectLength,x       ;if on second column of pipe, skip this
+       beq NoUDP
+       jsr FindEmptyEnemySlot       ;otherwise try to insert upside-down
+       bcs NoUDP                    ;piranha plant, if no empty slots, skip this
+       lda #$04
+       jsr SetupPiranhaPlant        ;set up upside-down piranha plant
+       lda $06
+       asl
+       asl                          ;multiply height of pipe by 16
+       asl                          ;and add enemy Y position previously set up
+       asl                          ;then subtract 10 pixels, save as new Y position
+       clc
+       adc Enemy_Y_Position,x
+       sec
+       sbc #$0a
+       sta Enemy_Y_Position,x
+       sta PiranhaPlantDownYPos,x   ;set as "down" position
+       clc                          ;add 24 pixels, save as "up" position
+       adc #$18                     ;note up and down here are reversed
+       sta PiranhaPlantUpYPos,x     
+       inc PiranhaPlant_MoveFlag,x  ;set movement flag
+NoUDP: pla
+       tay                          ;return tile offset
+       pha
+       ldx $07
+       lda VerticalPipeData+2,y
+       ldy $06                      ;render the pipe shaft
+       dey
+       jsr RenderUnderPart
+       pla
+       tay
+       lda VerticalPipeData,y       ;and render the pipe end
+       sta MetatileBuffer,x
+       rts
 
-MRetainerCHRWorld3:
-.byte $00,$0e,$3f,$7f,$7f,$ff,$ff,$ff
-.byte $00,$0e,$3f,$7f,$7e,$fc,$f0,$ec
-.byte $7f,$7f,$7f,$7f,$3c,$1f,$47,$c1
-.byte $50,$4e,$00,$00,$0f,$00,$00,$00
-.byte $e1,$35,$06,$07,$63,$70,$30,$10
-.byte $02,$0f,$0f,$07,$e3,$f7,$fc,$70
-.byte $00,$70,$fc,$fe,$fe,$ff,$ff,$ff
-.byte $00,$70,$fc,$fe,$7e,$3f,$0f,$37
-.byte $fe,$fe,$fe,$fe,$3c,$f8,$e2,$83
-.byte $0a,$72,$00,$00,$f0,$00,$00,$00
-.byte $87,$ac,$60,$e0,$60,$0e,$0c,$08
-.byte $40,$f0,$f0,$e0,$c7,$ef,$3f,$0e
+MoveUpsideDownPiranhaP:
+      lda Enemy_State,x           ;check enemy state
+      bne ExMoveUDPP              ;if set at all, branch to leave
+      lda EnemyFrameTimer,x       ;check enemy's timer here
+      bne ExMoveUDPP              ;branch to end if not yet expired
+      lda PiranhaPlant_MoveFlag,x ;check movement flag
+      bne SetupToMovePPlant       ;if moving, skip to part ahead
+      lda PiranhaPlant_Y_Speed,x  ;get vertical speed
+      eor #$ff
+      clc                         ;change to two's compliment
+      adc #$01
+      sta PiranhaPlant_Y_Speed,x  ;save as new vertical speed
+      inc PiranhaPlant_MoveFlag,x ;increment to set movement flag
 
-MRetainerCHRWorld4:
-.byte $0f,$3f,$7f,$7f,$ff,$ff,$ff,$ff
-.byte $0f,$3f,$7f,$7f,$fe,$fc,$ee,$e0
-.byte $e1,$f1,$7f,$1f,$0c,$66,$73,$21
-.byte $c4,$00,$00,$00,$01,$00,$00,$00
-.byte $3d,$06,$07,$0e,$1c,$18,$00,$00
-.byte $07,$07,$03,$00,$58,$78,$70,$31
-.byte $f0,$fc,$fe,$fe,$fe,$ff,$ff,$ff
-.byte $f0,$fc,$fe,$fe,$7e,$7f,$3f,$07
-.byte $87,$8f,$fe,$f8,$30,$64,$c6,$86
-.byte $21,$00,$00,$00,$80,$00,$00,$00
-.byte $bc,$60,$c0,$c0,$c0,$c0,$c0,$00
-.byte $e0,$e0,$c0,$00,$00,$c0,$c0,$f0
+SetupToMovePPlant:
+      lda PiranhaPlantUpYPos,x    ;get original vertical coordinate (lowest point)
+      ldy PiranhaPlant_Y_Speed,x  ;get vertical speed
+      bpl RiseFallPiranhaPlant    ;branch if moving downwards
+      lda PiranhaPlantDownYPos,x  ;otherwise get other vertical coordinate (highest point)
 
-;; unused bytes
-.byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
-.byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff
-.byte $ff,$ff,$ff,$ff,$ff
-
-.else
-
-;level 1-4
-E_CastleArea1:
-  .byte $35, $9d, $55, $9b, $c9, $1b, $59, $9d, $45, $9b, $c5, $1b, $26, $80, $45, $1b
-  .byte $b9, $1d, $f0, $15, $59, $9d, $0f, $08, $78, $2d, $96, $28, $90, $b5, $ff
-
-;level 2-4
-E_CastleArea2:
-  .byte $74, $80, $f0, $38, $a0, $bb, $40, $bc, $8c, $1d, $c9, $9d, $05, $9b, $1c, $0c
-  .byte $59, $1b, $b5, $1d, $2c, $8c, $40, $15, $7c, $1b, $dc, $1d, $6c, $8c, $bc, $0c
-  .byte $78, $ad, $a5, $28, $90, $b5, $ff
-
-;level 3-4
-E_CastleArea3:
-  .byte $0f, $04, $9c, $0c, $0f, $07, $c5, $1b, $65, $9d, $49, $9d, $5c, $8c, $78, $2d
-  .byte $90, $b5, $ff
-
-;level 4-4
-E_CastleArea4:
-  .byte $49, $9f, $67, $03, $79, $9d, $a0, $3a, $57, $9f, $bb, $1d, $d5, $25, $0f, $05
-  .byte $18, $1d, $74, $00, $84, $00, $94, $00, $c6, $29, $49, $9d, $db, $05, $0f, $08
-  .byte $05, $9b, $09, $1d, $b0, $38, $80, $95, $c0, $3c, $ec, $a8, $cc, $8c, $4a, $9b
-  .byte $78, $2d, $90, $b5, $ff
-
-;level 1-1
-E_GroundArea1:
-  .byte $07, $8e, $47, $03, $0f, $03, $10, $38, $1b, $80, $53, $06, $77, $0e, $83, $83
-  .byte $a0, $3d, $90, $3b, $90, $b7, $60, $bc, $b7, $0e, $ee, $42, $00, $f7, $80, $6b
-  .byte $83, $1b, $83, $ab, $06, $ff
-
-;level 1-3
-E_GroundArea2:
-  .byte $96, $a4, $f9, $24, $d3, $83, $3a, $83, $5a, $03, $95, $07, $f4, $0f, $69, $a8
-  .byte $33, $87, $86, $24, $c9, $24, $4b, $83, $67, $83, $17, $83, $56, $28, $95, $24
-  .byte $0a, $a4, $ff
-
-;level 2-1
-E_GroundArea3:
-  .byte $0f, $02, $47, $0e, $87, $0e, $c7, $0e, $f7, $0e, $27, $8e, $ee, $42, $25, $0f
-  .byte $06, $ac, $28, $8c, $a8, $4e, $b3, $20, $8b, $8e, $f7, $90, $36, $90, $e5, $8e
-  .byte $32, $8e, $c2, $06, $d2, $06, $e2, $06, $ff
-
-;level 2-2
-E_GroundArea4:
-  .byte $15, $8e, $9b, $06, $e0, $37, $80, $bc, $0f, $04, $2b, $3b, $ab, $0e, $eb, $0e
-  .byte $0f, $06, $f0, $37, $4b, $8e, $6b, $80, $bb, $3c, $4b, $bb, $ee, $42, $20, $1b
-  .byte $bc, $cb, $00, $ab, $83, $eb, $bb, $0f, $0e, $1b, $03, $9b, $37, $d4, $0e, $a3
-  .byte $86, $b3, $06, $c3, $06, $ff
-
-;level 2-3
-E_GroundArea5:
-  .byte $c0, $be, $0f, $03, $38, $0e, $15, $8f, $aa, $83, $f8, $07, $0f, $07, $96, $10
-  .byte $0f, $09, $48, $10, $ba, $03, $ff
-
-;level 3-1
-E_GroundArea6:
-  .byte $87, $85, $a3, $05, $db, $83, $fb, $03, $93, $8f, $bb, $03, $ce, $42, $42, $9b
-  .byte $83, $ae, $b3, $40, $db, $00, $f4, $0f, $33, $8f, $74, $0f, $10, $bc, $f5, $0f
-  .byte $2e, $c2, $45, $b7, $03, $f7, $03, $c8, $90, $ff
-
-;level 3-3
-E_GroundArea7:
-  .byte $80, $be, $83, $03, $92, $10, $4b, $80, $b0, $3c, $07, $80, $b7, $24, $0c, $a4
-  .byte $96, $a9, $1b, $83, $7b, $24, $b7, $24, $97, $83, $e2, $0f, $a9, $a9, $38, $a9
-  .byte $0f, $0b, $74, $8f, $ff
-
-;level 4-1
-E_GroundArea8:
-  .byte $e2, $91, $0f, $03, $42, $11, $0f, $06, $72, $11, $0f, $08, $ee, $02, $60, $02
-  .byte $91, $ee, $b3, $60, $d3, $86, $ff
-
-;level 4-2
-E_GroundArea9:
-  .byte $0f, $02, $9b, $02, $ab, $02, $0f, $04, $13, $03, $92, $11, $60, $b7, $00, $bc
-  .byte $00, $bb, $0b, $83, $cb, $03, $7b, $85, $9e, $c2, $60, $e6, $05, $0f, $0c, $62
-  .byte $10, $ff
-
-;level 4-3
-E_GroundArea11:
-  .byte $e6, $a9, $57, $a8, $b5, $24, $19, $a4, $76, $28, $a2, $0f, $95, $8f, $9d, $a8
-  .byte $0f, $07, $09, $29, $55, $24, $8b, $17, $a9, $24, $db, $83, $04, $a9, $24, $8f
-  .byte $65, $0f, $ff
-
-;cloud level used in levels 2-1, 3-1 and 4-1
-E_GroundArea20:
-  .byte $0a, $aa, $1e, $22, $29, $1e, $25, $49, $2e, $27, $66, $ff
-
-;level 1-2
-E_UndergroundArea1:
-  .byte $0a, $8e, $de, $b4, $00, $e0, $37, $5b, $82, $2b, $a9, $aa, $29, $29, $a9, $a8
-  .byte $29, $0f, $08, $f0, $3c, $79, $a9, $c5, $26, $cd, $26, $ee, $3b, $01, $67, $b4
-  .byte $0f, $0c, $2e, $c1, $00, $ff
-
-;warp zone area used by level 1-2
-E_UndergroundArea2:
-  .byte $09, $a9, $19, $a9, $de, $42, $02, $7b, $83, $ff
-
-;underground bonus rooms used in many levels
-E_UndergroundArea3:
-  .byte $1e, $a0, $0a, $1e, $23, $2b, $1e, $28, $6b, $0f, $03, $1e, $40, $08, $1e, $25
-  .byte $4e, $0f, $06, $1e, $22, $25, $1e, $25, $45, $ff
-
-;level 3-2
-E_WaterArea1:
-  .byte $0f, $01, $2a, $07, $2e, $3b, $41, $e9, $07, $0f, $03, $6b, $07, $f9, $07, $b8
-  .byte $80, $2a, $87, $4a, $87, $b3, $0f, $84, $87, $47, $83, $87, $07, $0a, $87, $42
-  .byte $87, $1b, $87, $6b, $03, $ff
-
-;water area used by level 4-1
-E_WaterArea3:
-  .byte $1e, $a7, $6a, $5b, $82, $74, $07, $d8, $07, $e8, $02, $0f, $04, $26, $07, $ff
-
-;level 1-4
-L_CastleArea1:
-  .byte $9b, $07, $05, $32, $06, $33, $07, $34, $33, $8e, $4e, $0a, $7e, $06, $9e, $0a
-  .byte $ce, $06, $e3, $00, $ee, $0a, $1e, $87, $53, $0e, $8e, $02, $9c, $00, $c7, $0e
-  .byte $d7, $37, $57, $8e, $6c, $05, $da, $60, $e9, $61, $f8, $62, $fe, $0b, $43, $8e
-  .byte $c3, $0e, $43, $8e, $b7, $0e, $ee, $09, $fe, $0a, $3e, $86, $57, $0e, $6e, $0a
-  .byte $7e, $06, $ae, $0a, $be, $06, $fe, $07, $15, $e2, $55, $62, $95, $62, $fe, $0a
-  .byte $0d, $c4, $cd, $43, $ce, $09, $de, $0b, $dd, $42, $fe, $02, $5d, $c7, $fd
-
-;level 2-4
-L_CastleArea2:
-  .byte $9b, $07, $05, $32, $06, $33, $07, $34, $03, $e2, $0e, $06, $1e, $0c, $7e, $0a
-  .byte $8e, $05, $8e, $82, $8a, $8e, $8e, $0a, $ee, $02, $0a, $e0, $19, $61, $23, $06
-  .byte $28, $62, $2e, $0b, $7e, $0a, $81, $62, $87, $30, $8e, $04, $a7, $31, $c7, $0e
-  .byte $d7, $33, $fe, $03, $03, $8e, $0e, $0a, $11, $62, $1e, $04, $27, $32, $4e, $0a
-  .byte $51, $62, $57, $0e, $5e, $04, $67, $34, $9e, $0a, $a1, $62, $ae, $03, $b3, $0e
-  .byte $be, $0b, $ee, $09, $fe, $0a, $2e, $82, $7a, $0e, $7e, $0a, $97, $31, $be, $04
-  .byte $da, $0e, $ee, $0a, $f1, $62, $fe, $02, $3e, $8a, $7e, $06, $ae, $0a, $ce, $06
-  .byte $fe, $0a, $0d, $c4, $11, $53, $21, $52, $24, $0b, $51, $52, $61, $52, $cd, $43
-  .byte $ce, $09, $dd, $42, $de, $0b, $fe, $02, $5d, $c7, $fd
-
-;level 3-4
-L_CastleArea3:
-  .byte $5b, $09, $05, $34, $06, $35, $6e, $06, $7e, $0a, $ae, $02, $fe, $02, $0d, $01
-  .byte $0e, $0e, $2e, $0a, $6e, $09, $be, $0a, $ed, $4b, $e4, $60, $ee, $0d, $5e, $82
-  .byte $78, $72, $a4, $3d, $a5, $3e, $a6, $3f, $a3, $be, $a6, $3e, $a9, $32, $e9, $3a
-  .byte $9c, $80, $a3, $33, $a6, $33, $a9, $33, $e5, $06, $ed, $4b, $f3, $30, $f6, $30
-  .byte $f9, $30, $fe, $02, $0d, $05, $3c, $01, $57, $73, $7c, $02, $93, $30, $a7, $73
-  .byte $b3, $37, $cc, $01, $07, $83, $17, $03, $27, $03, $37, $03, $64, $3b, $77, $3a
-  .byte $0c, $80, $2e, $0e, $9e, $02, $a5, $62, $b6, $61, $cc, $02, $c3, $33, $ed, $4b
-  .byte $03, $b7, $07, $37, $83, $37, $87, $37, $dd, $4b, $03, $b5, $07, $35, $5e, $0a
-  .byte $8e, $02, $ae, $0a, $de, $06, $fe, $0a, $0d, $c4, $cd, $43, $ce, $09, $dd, $42
-  .byte $de, $0b, $fe, $02, $5d, $c7, $fd
-
-;level 4-4
-L_CastleArea4:
-  .byte $9b, $07, $05, $32, $06, $33, $07, $34, $4e, $03, $5c, $02, $0c, $f1, $27, $00
-  .byte $3c, $74, $47, $0e, $fc, $00, $fe, $0b, $77, $8e, $ee, $09, $fe, $0a, $45, $b2
-  .byte $55, $0e, $99, $32, $b9, $0e, $fe, $02, $0e, $85, $fe, $02, $16, $8e, $2e, $0c
-  .byte $ae, $0a, $ee, $05, $1e, $82, $47, $0e, $07, $bd, $c4, $72, $de, $0a, $fe, $02
-  .byte $03, $8e, $07, $0e, $13, $3c, $17, $3d, $e3, $03, $ee, $0a, $f3, $06, $f7, $03
-  .byte $fe, $0e, $fe, $8a, $38, $e4, $4a, $72, $68, $64, $37, $b0, $98, $64, $a8, $64
-  .byte $e8, $64, $f8, $64, $0d, $c4, $71, $64, $cd, $43, $ce, $09, $dd, $42, $de, $0b
-  .byte $fe, $02, $5d, $c7, $fd
-
-;level 1-1
-L_GroundArea1:
-  .byte $50, $31, $0f, $26, $13, $e4, $23, $24, $27, $23, $37, $07, $66, $61, $ac, $74
-  .byte $c7, $01, $0b, $f1, $77, $73, $b6, $04, $db, $71, $5c, $82, $83, $2d, $a2, $47
-  .byte $a7, $0a, $b7, $29, $4f, $b3, $87, $0b, $93, $23, $cc, $06, $e3, $2c, $3a, $e0
-  .byte $7c, $71, $97, $01, $ac, $73, $e6, $61, $0e, $b1, $b7, $f3, $dc, $02, $d3, $25
-  .byte $07, $fb, $2c, $01, $e7, $73, $2c, $f2, $34, $72, $57, $00, $7c, $02, $39, $f1
-  .byte $bf, $37, $33, $e7, $cd, $41, $0f, $a6, $ed, $47, $fd
-
-;level 1-3
-L_GroundArea2:
-  .byte $50, $11, $0f, $26, $fe, $10, $47, $92, $56, $40, $ac, $16, $af, $12, $0f, $95
-  .byte $73, $16, $82, $44, $ec, $48, $bc, $c2, $1c, $b1, $b3, $16, $c2, $44, $86, $c0
-  .byte $9c, $14, $9f, $12, $a6, $40, $df, $15, $0b, $96, $43, $12, $97, $31, $d3, $12
-  .byte $03, $92, $27, $14, $63, $00, $c7, $15, $d6, $43, $ac, $97, $af, $11, $1f, $96
-  .byte $64, $13, $e3, $12, $2e, $91, $9d, $41, $ae, $42, $df, $20, $cd, $c7, $fd
-
-;level 2-1
-L_GroundArea3:
-  .byte $52, $21, $0f, $20, $6e, $64, $4f, $b2, $7c, $5f, $7c, $3f, $7c, $d8, $7c, $38
-  .byte $83, $02, $a3, $00, $c3, $02, $f7, $16, $5c, $d6, $cf, $35, $d3, $20, $e3, $0a
-  .byte $f3, $20, $25, $b5, $2c, $53, $6a, $7a, $8c, $54, $da, $72, $fc, $50, $0c, $d2
-  .byte $39, $73, $5c, $54, $aa, $72, $cc, $53, $f7, $16, $33, $83, $40, $06, $5c, $5b
-  .byte $09, $93, $27, $0f, $3c, $5c, $0a, $b0, $63, $27, $78, $72, $93, $09, $97, $03
-  .byte $a7, $03, $b7, $22, $47, $81, $5c, $72, $2a, $b0, $28, $0f, $3c, $5f, $58, $31
-  .byte $b8, $31, $28, $b1, $3c, $5b, $98, $31, $fa, $30, $03, $b2, $20, $04, $7f, $b7
-  .byte $f3, $67, $8d, $c1, $bf, $26, $ad, $c7, $fd
-
-;level 2-2
-L_GroundArea4:
-  .byte $54, $11, $0f, $26, $38, $f2, $ab, $71, $0b, $f1, $96, $42, $ce, $10, $1e, $91
-  .byte $29, $61, $3a, $60, $4e, $10, $78, $74, $8e, $11, $06, $c3, $1a, $e0, $1e, $10
-  .byte $5e, $11, $67, $63, $77, $63, $88, $62, $99, $61, $aa, $60, $be, $10, $0a, $f2
-  .byte $15, $45, $7e, $11, $7a, $31, $9a, $e0, $ac, $02, $d9, $61, $d4, $0a, $ec, $01
-  .byte $d6, $c2, $84, $c3, $98, $fa, $d3, $07, $d7, $0b, $e9, $61, $ee, $10, $2e, $91
-  .byte $39, $71, $93, $03, $a6, $03, $be, $10, $e1, $71, $e3, $31, $5e, $91, $69, $61
-  .byte $e6, $41, $28, $e2, $99, $71, $ae, $10, $ce, $11, $be, $90, $d6, $32, $3e, $91
-  .byte $5f, $37, $66, $60, $d3, $67, $6d, $c1, $af, $26, $9d, $c7, $fd
-
-;level 2-3
-L_GroundArea5:
-  .byte $54, $11, $0f, $26, $af, $32, $d8, $62, $e8, $62, $f8, $62, $fe, $10, $0c, $be
-  .byte $f8, $64, $0d, $c8, $2c, $43, $98, $64, $ac, $39, $48, $e4, $6a, $62, $7c, $47
-  .byte $fa, $62, $3c, $b7, $ea, $62, $fc, $4d, $f6, $02, $03, $80, $06, $02, $13, $02
-  .byte $da, $62, $0d, $c8, $0b, $17, $97, $16, $2c, $b1, $33, $43, $6c, $31, $ac, $31
-  .byte $17, $93, $73, $12, $cc, $31, $1a, $e2, $2c, $4b, $67, $48, $ea, $62, $0d, $ca
-  .byte $17, $12, $53, $12, $be, $11, $1d, $c1, $3e, $42, $6f, $20, $4d, $c7, $fd
-
-;level 3-1
-L_GroundArea6:
-  .byte $52, $b1, $0f, $20, $6e, $75, $53, $aa, $57, $25, $b7, $0a, $c7, $23, $0c, $83
-  .byte $5c, $72, $87, $01, $c3, $00, $c7, $20, $dc, $65, $0c, $87, $c3, $22, $f3, $03
-  .byte $03, $a2, $27, $7b, $33, $03, $43, $23, $52, $42, $9c, $06, $a7, $20, $c3, $23
-  .byte $03, $a2, $0c, $02, $33, $09, $39, $71, $43, $23, $77, $06, $83, $67, $a7, $73
-  .byte $5c, $82, $c9, $11, $07, $80, $1c, $71, $98, $11, $9a, $10, $f3, $04, $16, $f4
-  .byte $3c, $02, $68, $7a, $8c, $01, $a7, $73, $e7, $73, $ac, $83, $09, $8f, $1c, $03
-  .byte $9f, $37, $13, $e7, $7c, $02, $ad, $41, $ef, $26, $0d, $0e, $39, $71, $7f, $37
-  .byte $f2, $68, $02, $e8, $12, $3a, $1c, $00, $68, $7a, $de, $3f, $6d, $c5, $fd
-
-;level 3-3
-L_GroundArea7:
-  .byte $55, $10, $0b, $1f, $0f, $26, $d6, $12, $07, $9f, $33, $1a, $fb, $1f, $f7, $94
-  .byte $53, $94, $71, $71, $cc, $15, $cf, $13, $1f, $98, $63, $12, $9b, $13, $a9, $71
-  .byte $fb, $17, $09, $f1, $13, $13, $21, $42, $59, $0f, $eb, $13, $33, $93, $40, $06
-  .byte $8c, $14, $8f, $17, $93, $40, $cf, $13, $0b, $94, $57, $15, $07, $93, $19, $f3
-  .byte $c6, $43, $c7, $13, $d3, $03, $e3, $03, $33, $b0, $4a, $72, $55, $46, $73, $31
-  .byte $a8, $74, $e3, $12, $8e, $91, $ad, $41, $ce, $42, $ef, $20, $dd, $c7, $fd
-
-;level 4-1
-L_GroundArea8:
-  .byte $52, $21, $0f, $20, $6e, $63, $a9, $f1, $fb, $71, $22, $83, $37, $0b, $36, $50
-  .byte $39, $51, $b8, $62, $57, $f3, $e8, $02, $f8, $02, $08, $82, $18, $02, $2d, $4a
-  .byte $28, $02, $38, $02, $48, $00, $a8, $0f, $aa, $30, $bc, $5a, $6a, $b0, $4f, $b6
-  .byte $b7, $04, $9a, $b0, $ac, $71, $c7, $01, $e6, $74, $0d, $09, $46, $02, $56, $00
-  .byte $6c, $01, $84, $79, $86, $02, $96, $02, $a4, $71, $a6, $02, $b6, $02, $c4, $71
-  .byte $c6, $02, $d6, $02, $39, $f1, $6c, $00, $77, $02, $a3, $09, $ac, $00, $b8, $72
-  .byte $dc, $01, $07, $f3, $4c, $00, $6f, $37, $e3, $03, $e6, $03, $5d, $ca, $6c, $00
-  .byte $7d, $41, $cf, $26, $9d, $c7, $fd
-
-;level 4-2
-L_GroundArea9:
-  .byte $50, $a1, $0f, $26, $17, $91, $19, $11, $48, $00, $68, $11, $6a, $10, $96, $14
-  .byte $d8, $0a, $e8, $02, $f8, $02, $dc, $81, $6c, $81, $89, $0f, $9c, $00, $c3, $29
-  .byte $f8, $62, $47, $a7, $c6, $61, $0d, $07, $56, $74, $b7, $00, $b9, $11, $cc, $76
-  .byte $ed, $4a, $1c, $80, $37, $01, $3a, $10, $de, $20, $e9, $0b, $ee, $21, $c8, $bc
-  .byte $9c, $f6, $bc, $00, $cb, $7a, $eb, $72, $0c, $82, $39, $71, $b7, $63, $cc, $03
-  .byte $e6, $60, $26, $e0, $4a, $30, $53, $31, $5c, $58, $ed, $41, $2f, $a6, $1d, $c7
-  .byte $fd
-
-;level 4-3
-L_GroundArea11:
-  .byte $50, $11, $0f, $26, $fe, $10, $8b, $93, $a9, $0f, $14, $c1, $cc, $16, $cf, $11
-  .byte $2f, $95, $b7, $14, $c7, $96, $d6, $44, $2b, $92, $39, $0f, $72, $41, $a7, $00
-  .byte $1b, $95, $97, $13, $6c, $95, $6f, $11, $a2, $40, $bf, $15, $c2, $40, $0b, $9f
-  .byte $53, $16, $62, $44, $72, $c2, $9b, $1d, $b7, $e0, $ed, $4a, $03, $e0, $8e, $11
-  .byte $9d, $41, $be, $42, $ef, $20, $cd, $c7, $fd
-
-;cloud level used in levels 2-1, 3-1 and 4-1
-L_GroundArea20:
-  .byte $00, $c1, $4c, $00, $03, $cf, $00, $d7, $23, $4d, $07, $af, $2a, $4c, $03, $cf
-  .byte $3e, $80, $f3, $4a, $bb, $c2, $bd, $c7, $fd
-
-;level 1-2
-L_UndergroundArea1:
-  .byte $48, $0f, $0e, $01, $5e, $02, $0a, $b0, $1c, $54, $6a, $30, $7f, $34, $c6, $64
-  .byte $d6, $64, $e6, $64, $f6, $64, $fe, $00, $f0, $07, $00, $a1, $1e, $02, $47, $73
-  .byte $7e, $04, $84, $52, $94, $50, $95, $0b, $96, $50, $a4, $52, $ae, $05, $b8, $51
-  .byte $c8, $51, $ce, $01, $17, $f3, $45, $03, $52, $09, $62, $21, $6f, $34, $81, $21
-  .byte $9e, $02, $b6, $64, $c6, $64, $c0, $0c, $d6, $64, $d0, $07, $e6, $64, $e0, $0c
-  .byte $f0, $07, $fe, $0a, $0d, $06, $0e, $01, $4e, $04, $67, $73, $8e, $02, $b7, $0a
-  .byte $bc, $03, $c4, $72, $c7, $22, $08, $f2, $2c, $02, $59, $71, $7c, $01, $96, $74
-  .byte $bc, $01, $d8, $72, $fc, $01, $39, $f1, $4e, $01, $9e, $04, $a7, $52, $b7, $0b
-  .byte $b8, $51, $c7, $51, $d7, $50, $de, $02, $3a, $e0, $3e, $0a, $9e, $00, $08, $d4
-  .byte $18, $54, $28, $54, $48, $54, $6e, $06, $9e, $01, $a8, $52, $af, $47, $b8, $52
-  .byte $c8, $52, $d8, $52, $de, $0f, $4d, $c7, $ce, $01, $dc, $01, $f9, $79, $1c, $82
-  .byte $48, $72, $7f, $37, $f2, $68, $01, $e9, $11, $3a, $68, $7a, $de, $0f, $6d, $c5
-  .byte $fd
-
-;warp zone area used by level 1-2
-L_UndergroundArea2:
-  .byte $0b, $0f, $0e, $01, $9c, $71, $b7, $00, $be, $00, $3e, $81, $47, $73, $5e, $00
-  .byte $63, $42, $8e, $01, $a7, $73, $be, $00, $7e, $81, $88, $72, $f0, $59, $fe, $00
-  .byte $00, $d9, $0e, $01, $39, $79, $a7, $03, $ae, $00, $b4, $03, $de, $0f, $0d, $05
-  .byte $0e, $02, $68, $7a, $be, $01, $de, $0f, $6d, $c5, $fd
-
-;underground bonus rooms used with worlds 1-4
-L_UndergroundArea3:
-  .byte $08, $8f, $0e, $01, $17, $05, $2e, $02, $30, $07, $37, $03, $3a, $49, $44, $03
-  .byte $58, $47, $df, $4a, $6d, $c7, $0e, $81, $00, $5a, $2e, $02, $87, $52, $97, $2f
-  .byte $99, $4f, $0a, $90, $93, $56, $a3, $0b, $a7, $50, $b3, $55, $df, $4a, $6d, $c7
-  .byte $0e, $81, $00, $5a, $2e, $00, $3e, $02, $41, $56, $57, $25, $56, $45, $68, $51
-  .byte $7a, $43, $b7, $0b, $b8, $51, $df, $4a, $6d, $c7, $fd
-
-;level 3-2
-L_WaterArea1:
-  .byte $41, $01, $03, $b4, $04, $34, $05, $34, $5c, $02, $83, $37, $84, $37, $85, $37
-  .byte $09, $c2, $0c, $02, $1d, $49, $fa, $60, $09, $e1, $18, $62, $20, $63, $27, $63
-  .byte $33, $37, $37, $63, $47, $63, $5c, $05, $79, $43, $fe, $06, $35, $d2, $46, $48
-  .byte $91, $53, $d6, $51, $fe, $01, $0c, $83, $6c, $04, $b4, $62, $c4, $62, $d4, $62
-  .byte $e4, $62, $f4, $62, $18, $d2, $79, $51, $f4, $66, $fe, $02, $0c, $8a, $1d, $49
-  .byte $31, $55, $56, $41, $77, $41, $98, $41, $c5, $55, $fe, $01, $07, $e3, $17, $63
-  .byte $27, $63, $37, $63, $47, $63, $57, $63, $67, $63, $78, $62, $89, $61, $9a, $60
-  .byte $bc, $07, $ca, $42, $3a, $b3, $46, $53, $63, $34, $66, $44, $7c, $01, $9a, $33
-  .byte $b7, $52, $dc, $01, $fa, $32, $05, $d4, $2c, $0d, $43, $37, $47, $35, $b7, $30
-  .byte $c3, $64, $23, $e4, $29, $45, $33, $64, $43, $64, $53, $64, $63, $64, $73, $64
-  .byte $9a, $60, $a9, $61, $b8, $62, $be, $0b, $d4, $31, $d5, $0d, $de, $0f, $0d, $ca
-  .byte $7d, $47, $fd
-
-;water area used by level 4-1
-L_WaterArea3:
-  .byte $01, $01, $78, $52, $b5, $55, $da, $60, $e9, $61, $f8, $62, $fe, $0b, $fe, $81
-  .byte $0a, $cf, $36, $49, $62, $43, $fe, $07, $36, $c9, $fe, $01, $0c, $84, $65, $55
-  .byte $97, $52, $9a, $32, $a9, $31, $b8, $30, $c7, $63, $ce, $0f, $d5, $0d, $7d, $c7
-  .byte $fd
-
-;a bunch of unused space
-  .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-  .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-  .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-  .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-  .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-  .byte $ff, $ff, $ff
-.endif
+RiseFallPiranhaPlant:
+       sta $00                     ;save vertical coordinate here
+       lda TimerControl            ;get master timer control
+       bne ExMoveUDPP              ;branch to leave if set (likely not necessary)
+       lda Enemy_Y_Position,x      ;get current vertical coordinate
+       clc
+       adc PiranhaPlant_Y_Speed,x  ;add vertical speed to move up or down
+       sta Enemy_Y_Position,x      ;save as new vertical coordinate
+       cmp $00                     ;compare against low or high coordinate
+       bne ExMoveUDPP              ;branch to leave if not yet reached
+       lda #$00
+       sta PiranhaPlant_MoveFlag,x ;otherwise clear movement flag
+       lda #$20
+       sta EnemyFrameTimer,x       ;set timer to delay piranha plant movement
+ExMoveUDPP:
+       rts
 
 ;-------------------------------------------------------------------------------------
 
-;this is overwritten by the contents of SM2SAVE
-GamesBeatenCount:
-       .byte $00
-.ifdef ANN
-       .byte $FF
-.endif
+.ifndef ANN
+BlowPlayerAround:
+        lda WindFlag            ;if wind is turned off, just exit
+        beq ExBlow
+        lda AreaType            ;don't blow the player around unless
+        cmp #$01                ;the area is ground type
+        bne ExBlow
+        ldy #$01
+        lda FrameCounter        ;branch to set d0 if on an odd frame
+        asl
+        bcs BThr                ;otherwise wind will only blow
+        ldy #$03                ;one out of every four frames
+BThr:   sty $00
+        lda FrameCounter        ;throttle wind blowing by using the frame counter
+        and $00                 ;to mask out certain frames
+        bne ExBlow
+        lda Player_X_Position   ;move player slightly to the right
+        clc                     ;to simulate the wind moving the player
+        adc #$01
+        sta Player_X_Position
+        lda Player_PageLoc
+        adc #$00
+        sta Player_PageLoc
+        inc Player_X_Scroll     ;add one to movement speed for scroll
+ExBlow: rts
 
-;-------------------------------------------------------------------------------------
+;note the position data values are overwritten in RAM
+LeavesYPos:
+        .byte $30, $70, $b8, $50, $98, $30
+        .byte $70, $b8, $50, $98, $30, $70
 
-SoundEngine:
-         lda OperMode              ;are we in attract mode?
-         bne SndOn
-         sta SND_MASTERCTRL_REG    ;if so, disable sound and leave
-         rts
-SndOn:   lda #$ff
-         sta JOYPAD_PORT2          ;disable irqs from apu and set frame counter mode
-         lda #$0f
-         sta SND_MASTERCTRL_REG    ;enable first four channels
-         lda PauseModeFlag         ;is sound already in pause mode?
-         bne InPause
-         lda PauseSoundQueue       ;if not, check pause sfx queue    
-         cmp #$01
-         bne RunSoundSubroutines   ;if queue is empty, skip pause mode routine
-InPause: lda PauseSoundBuffer      ;check pause sfx buffer
-         bne ContPau
-         lda PauseSoundQueue       ;check pause queue
-         beq SkipSoundSubroutines
-         sta PauseSoundBuffer      ;if queue full, store in buffer and activate
-         sta PauseModeFlag         ;pause mode to interrupt game sounds
-         lda #$00                  ;disable sound and clear sfx buffers
-         sta SND_MASTERCTRL_REG
-         sta Square1SoundBuffer
-         sta Square2SoundBuffer
-         sta NoiseSoundBuffer
-         lda #$0f
-         sta SND_MASTERCTRL_REG    ;enable sound again
-         lda #$2a                  ;store length of sound in pause counter
-         sta Squ1_SfxLenCounter
-PTone1F: lda #$44                  ;play first tone
-         bne PTRegC                ;unconditional branch
-ContPau: lda Squ1_SfxLenCounter    ;check pause length left
-         cmp #$24                  ;time to play second?
-         beq PTone2F
-         cmp #$1e                  ;time to play first again?
-         beq PTone1F
-         cmp #$18                  ;time to play second again?
-         bne DecPauC               ;only load regs during times, otherwise skip
-PTone2F: lda #$64                  ;store reg contents and play the pause sfx
-PTRegC:  ldx #$84
-         ldy #$7f
-         jsr PlaySqu1Sfx
-DecPauC: dec Squ1_SfxLenCounter    ;decrement pause sfx counter
-         bne SkipSoundSubroutines
-         lda #$00                  ;disable sound if in pause mode and
-         sta SND_MASTERCTRL_REG    ;not currently playing the pause sfx
-         lda PauseSoundBuffer      ;if no longer playing pause sfx, check to see
-         cmp #$02                  ;if we need to be playing sound again
-         bne SkipPIn
-         lda #$00                  ;clear pause mode to allow game sounds again
-         sta PauseModeFlag
-SkipPIn: lda #$00                  ;clear pause sfx buffer
-         sta PauseSoundBuffer
-         beq SkipSoundSubroutines
+LeavesXPos:
+        .byte $30, $30, $30, $60, $60, $a0
+        .byte $a0, $a0, $d0, $d0, $d0, $60
 
-RunSoundSubroutines:
-         jsr Square1SfxHandler  ;play sfx on square channel 1
-         jsr Square2SfxHandler  ; ''  ''  '' square channel 2
-         jsr NoiseSfxHandler    ; ''  ''  '' noise channel
-         jsr MusicHandler       ;play music on all channels
-         lda #$00               ;clear the music queues
-         sta AreaMusicQueue
-         sta EventMusicQueue
+LeavesTile:
+        .byte $7b, $7b, $7b, $7b, $7a, $7a
+        .byte $7b, $7b, $7b, $7a, $7b, $7a
 
-SkipSoundSubroutines:
-          lda #$00               ;clear the sound effects queues
-          sta Square1SoundQueue
-          sta Square2SoundQueue
+SimulateWind:
+          lda WindFlag             ;if no wind, branch to leave
+          beq ExSimW
+          lda #$04                 ;play wind sfx
           sta NoiseSoundQueue
-          sta PauseSoundQueue
-          ldy DAC_Counter        ;load some sort of counter 
-          lda AreaMusicBuffer
-          and #%00000011         ;check for specific music
-          beq NoIncDAC
-          inc DAC_Counter        ;increment and check counter
-          cpy #$30
-          bcc StrWave            ;if not there yet, just store it
-NoIncDAC: tya
-          beq StrWave            ;if we are at zero, do not decrement 
-          dec DAC_Counter        ;decrement counter
-StrWave:  sty SND_DELTA_REG+1    ;store into DMC load register (??)
-          rts                    ;we are done here
+          jsr ModifyLeavesPos      ;modify X and Y position data of leaves
+          ldx #$00                 ;use mostly unused sprite data offset
+          ldy Alt_SprDataOffset-1  ;for first six leaves
+DrawLeaf: lda LeavesYPosRAM,x
+          sta Sprite_Y_Position,y  ;set up sprite data in OAM memory
+          lda LeavesTileRAM,x
+          sta Sprite_Tilenumber,y
+          lda #$41
+          sta Sprite_Attributes,y
+          lda LeavesXPosRAM,x
+          sta Sprite_X_Position,y
+          iny
+          iny
+          iny
+          iny
+          inx                      ;if still on first six leaves, continue
+          cpx #$06                 ;using the first sprite data offset
+          bne DLLoop               ;otherwise use the next one instead
+          ldy Alt_SprDataOffset    ;note the next one is also used by blocks
+DLLoop:   cpx #$0c                 ;continue until done putting all leaves on the screen
+          bne DrawLeaf
+ExSimW:   rts
 
+LeavesPosAdder:
+   .byte $57, $57, $56, $56, $58, $58, $56, $56, $57, $58, $57, $58
+   .byte $59, $59, $58, $58, $5a, $5a, $58, $58, $59, $5a, $59, $5a
 
-;--------------------------------
+ModifyLeavesPos:
+         ldx #$0b
+MLPLoop: lda LeavesXPosRAM,x      ;add each adder to each X position twice
+         clc                   ;and to each Y position once
+         adc LeavesPosAdder,x
+         adc LeavesPosAdder,x
+         sta LeavesXPosRAM,x
+         lda LeavesYPosRAM,x
+         clc
+         adc LeavesPosAdder,x
+         sta LeavesYPosRAM,x
+         dex
+         bpl MLPLoop
+         rts
 
-Dump_Squ1_Regs:
-      sty SND_SQUARE1_REG+1  ;dump the contents of X and Y into square 1's control regs
-      stx SND_SQUARE1_REG
-      rts
-      
-PlaySqu1Sfx:
-      jsr Dump_Squ1_Regs     ;do sub to set ctrl regs for square 1, then set frequency regs
-
-SetFreq_Squ1:
-      ldx #$00               ;set frequency reg offset for square 1 sound channel
-
-Dump_Freq_Regs:
-        tay
-        lda FreqRegLookupTbl+1,y  ;use previous contents of A for sound reg offset
-        beq NoTone                ;if zero, then do not load
-        sta SND_REGISTER+2,x      ;first byte goes into LSB of frequency divider
-        lda FreqRegLookupTbl,y    ;second byte goes into 3 MSB plus extra bit for 
-        ora #%00001000            ;length counter
-        sta SND_REGISTER+3,x
-NoTone: rts
-
-Dump_Sq2_Regs:
-      stx SND_SQUARE2_REG    ;dump the contents of X and Y into square 2's control regs
-      sty SND_SQUARE2_REG+1
-      rts
-
-PlaySqu2Sfx:
-      jsr Dump_Sq2_Regs      ;do sub to set ctrl regs for square 2, then set frequency regs
-
-SetFreq_Squ2:
-      ldx #$04               ;set frequency reg offset for square 2 sound channel
-      bne Dump_Freq_Regs     ;unconditional branch
-
-SetFreq_Tri:
-      ldx #$08               ;set frequency reg offset for triangle sound channel
-      bne Dump_Freq_Regs     ;unconditional branch
-
-;--------------------------------
-
-SwimStompEnvelopeData:
-      .byte $9f, $9b, $98, $96, $95, $94, $92, $90
-      .byte $90, $9a, $97, $95, $93, $92
-
-PlayFlagpoleSlide:
-       lda #$40               ;store length of flagpole sound
-       sta Squ1_SfxLenCounter
-       lda #$62               ;load part of reg contents for flagpole sound
-       jsr SetFreq_Squ1
-       ldx #$99               ;now load the rest
-       bne FPS2nd
-
-PlaySmallJump:
-       lda #$26               ;branch here for small mario jumping sound
-       bne JumpRegContents
-
-PlayBigJump:
-       lda #$18               ;branch here for big mario jumping sound
-
-JumpRegContents:
-       ldx #$82               ;note that small and big jump borrow each others' reg contents
-       ldy #$a7               ;anyway, this loads the first part of mario's jumping sound
-       jsr PlaySqu1Sfx
-       lda #$28               ;store length of sfx for both jumping sounds
-       sta Squ1_SfxLenCounter ;then continue on here
-
-ContinueSndJump:
-          lda Squ1_SfxLenCounter ;jumping sounds seem to be composed of three parts
-          cmp #$25               ;check for time to play second part yet
-          bne N2Prt
-          ldx #$5f               ;load second part
-          ldy #$f6
-          bne DmpJpFPS           ;unconditional branch
-N2Prt:    cmp #$20               ;check for third part
-          bne DecJpFPS
-          ldx #$48               ;load third part
-FPS2nd:   ldy #$bc               ;the flagpole slide sound shares part of third part
-DmpJpFPS: jsr Dump_Squ1_Regs
-          bne DecJpFPS           ;unconditional branch outta here
-
-PlayFireballThrow:
-        lda #$05
-        ldy #$99                 ;load reg contents for fireball throw sound
-        bne Fthrow               ;unconditional branch
-
-PlayBump:
-          lda #$0a                ;load length of sfx and reg contents for bump sound
-          ldy #$93
-Fthrow:   ldx #$9e                ;the fireball sound shares reg contents with the bump sound
-          sta Squ1_SfxLenCounter
-          lda #$0c                ;load offset for bump sound
-          jsr PlaySqu1Sfx
-
-ContinueBumpThrow:    
-          lda Squ1_SfxLenCounter  ;check for second part of bump sound
-          cmp #$06   
-          bne DecJpFPS
-          lda #$bb                ;load second part directly
-          sta SND_SQUARE1_REG+1
-DecJpFPS: bne BranchToDecLength1  ;unconditional branch
-
-
-Square1SfxHandler:
-       ldy Square1SoundQueue   ;check for sfx in queue
-       beq CheckSfx1Buffer
-       sty Square1SoundBuffer  ;if found, put in buffer
-       bmi PlaySmallJump       ;small jump
-       lsr Square1SoundQueue
-       bcs PlayBigJump         ;big jump
-       lsr Square1SoundQueue
-       bcs PlayBump            ;bump
-       lsr Square1SoundQueue
-       bcs PlaySwimStomp       ;swim/stomp
-       lsr Square1SoundQueue
-       bcs PlaySmackEnemy      ;smack enemy
-       lsr Square1SoundQueue
-       bcs PlayPipeDownInj     ;pipedown/injury
-       lsr Square1SoundQueue
-       bcs PlayFireballThrow   ;fireball throw
-       lsr Square1SoundQueue
-       bcs PlayFlagpoleSlide   ;slide flagpole
-
-CheckSfx1Buffer:
-       lda Square1SoundBuffer   ;check for sfx in buffer 
-       beq ExS1H                ;if not found, exit sub
-       bmi ContinueSndJump      ;small mario jump 
-       lsr
-       bcs ContinueSndJump      ;big mario jump 
-       lsr
-       bcs ContinueBumpThrow    ;bump
-       lsr
-       bcs ContinueSwimStomp    ;swim/stomp
-       lsr
-       bcs ContinueSmackEnemy   ;smack enemy
-       lsr
-       bcs ContinuePipeDownInj  ;pipedown/injury
-       lsr
-       bcs ContinueBumpThrow    ;fireball throw
-       lsr
-       bcs DecrementSfx1Length  ;slide flagpole
-ExS1H: rts
-
-
-PlaySwimStomp:
-      lda #$0e               ;store length of swim/stomp sound
-      sta Squ1_SfxLenCounter
-      ldy #$9c               ;store reg contents for swim/stomp sound
-      ldx #$9e
-      lda #$26
-      jsr PlaySqu1Sfx
-
-ContinueSwimStomp: 
-      ldy Squ1_SfxLenCounter        ;look up reg contents in data section based on
-      lda SwimStompEnvelopeData-1,y ;length of sound left, used to control sound's
-      sta SND_SQUARE1_REG           ;envelope
-      cpy #$06   
-      bne BranchToDecLength1
-      lda #$9e                      ;when the length counts down to a certain point, put this
-      sta SND_SQUARE1_REG+2         ;directly into the LSB of square 1's frequency divider
-
-BranchToDecLength1: 
-      bne DecrementSfx1Length  ;unconditional branch (regardless of how we got here)
-
-PlaySmackEnemy:
-      lda #$0e                 ;store length of smack enemy sound
-      ldy #$cb
-      ldx #$9f
-      sta Squ1_SfxLenCounter
-      lda #$28                 ;store reg contents for smack enemy sound
-      jsr PlaySqu1Sfx
-      bne DecrementSfx1Length  ;unconditional branch
-
-ContinueSmackEnemy:
-        ldy Squ1_SfxLenCounter  ;check about halfway through
-        cpy #$08
-        bne SmSpc
-        lda #$a0                ;if we're at the about-halfway point, make the second tone
-        sta SND_SQUARE1_REG+2   ;in the smack enemy sound
-        lda #$9f
-        bne SmTick
-SmSpc:  lda #$90                ;this creates spaces in the sound, giving it its distinct noise
-SmTick: sta SND_SQUARE1_REG
-
-DecrementSfx1Length:
-      dec Squ1_SfxLenCounter    ;decrement length of sfx
-      bne ExSfx1
-
-StopSquare1Sfx:
-        ldx #$00                ;if end of sfx reached, clear buffer
-        stx $f1                 ;and stop making the sfx
-        ldx #$0e
-        stx SND_MASTERCTRL_REG
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
-ExSfx1: rts
-
-PlayPipeDownInj:  
-      lda #$2f                ;load length of pipedown sound
-      sta Squ1_SfxLenCounter
-
-ContinuePipeDownInj:
-         lda Squ1_SfxLenCounter  ;some bitwise logic, forces the regs
-         lsr                     ;to be written to only during six specific times
-         bcs NoPDwnL             ;during which d3 must be set and d1-0 must be clear
-         lsr
-         bcs NoPDwnL
-         and #%00000010
-         beq NoPDwnL
-         ldy #$91                ;and this is where it actually gets written in
-         ldx #$9a
-         lda #$44
-         jsr PlaySqu1Sfx
-NoPDwnL: jmp DecrementSfx1Length
-
-;--------------------------------
-
-ExtraLifeFreqData:
-      .byte $58, $02, $54, $56, $4e, $44
-
-PowerUpGrabFreqData:
-      .byte $4c, $52, $4c, $48, $3e, $36, $3e, $36, $30
-      .byte $28, $4a, $50, $4a, $64, $3c, $32, $3c, $32
-      .byte $2c, $24, $3a, $64, $3a, $34, $2c, $22, $2c
-
-;residual frequency data
-      .byte $22, $1c, $14
-
-PUp_VGrow_FreqData:
-      .byte $14, $04, $22, $24, $16, $04, $24, $26 ;used by both
-      .byte $18, $04, $26, $28, $1a, $04, $28, $2a
-      .byte $1c, $04, $2a, $2c, $1e, $04, $2c, $2e ;used by vinegrow
-      .byte $20, $04, $2e, $30, $22, $04, $30, $32
-
-PlayCoinGrab:
-        lda #$35             ;load length of coin grab sound
-        ldx #$8d             ;and part of reg contents
-        bne CGrab_TTickRegL
-
-PlayTimerTick:
-        lda #$06             ;load length of timer tick sound
-        ldx #$98             ;and part of reg contents
-
-CGrab_TTickRegL:
-        sta Squ2_SfxLenCounter 
-        ldy #$7f                ;load the rest of reg contents 
-        lda #$42                ;of coin grab and timer tick sound
-        jsr PlaySqu2Sfx
-
-ContinueCGrabTTick:
-        lda Squ2_SfxLenCounter  ;check for time to play second tone yet
-        cmp #$30                ;timer tick sound also executes this, not sure why
-        bne N2Tone
-        lda #$54                ;if so, load the tone directly into the reg
-        sta SND_SQUARE2_REG+2
-N2Tone: bne DecrementSfx2Length
-
-PlayBlast:
-        lda #$20                ;load length of fireworks/gunfire sound
-        sta Squ2_SfxLenCounter
-        ldy #$94                ;load reg contents of fireworks/gunfire sound
-        lda #$5e
-        bne SBlasJ
-
-ContinueBlast:
-        lda Squ2_SfxLenCounter  ;check for time to play second part
-        cmp #$18
-        bne DecrementSfx2Length
-        ldy #$93                ;load second part reg contents then
-        lda #$18
-SBlasJ: bne BlstSJp             ;unconditional branch to load rest of reg contents
-
-PlayPowerUpGrab:
-        lda #$36                    ;load length of power-up grab sound
-        sta Squ2_SfxLenCounter
-
-ContinuePowerUpGrab:   
-        lda Squ2_SfxLenCounter      ;load frequency reg based on length left over
-        lsr                         ;divide by 2
-        bcs DecrementSfx2Length     ;alter frequency every other frame
-        tay
-        lda PowerUpGrabFreqData-1,y ;use length left over / 2 for frequency offset
-        ldx #$5d                    ;store reg contents of power-up grab sound
-        ldy #$7f
-
-LoadSqu2Regs:
-        jsr PlaySqu2Sfx
-
-DecrementSfx2Length:
-        dec Squ2_SfxLenCounter   ;decrement length of sfx
-        bne ExSfx2
-
-EmptySfx2Buffer:
-        ldx #$00                ;initialize square 2's sound effects buffer
-        stx Square2SoundBuffer
-
-StopSquare2Sfx:
-        ldx #$0d                ;stop playing the sfx
-        stx SND_MASTERCTRL_REG 
-        ldx #$0f
-        stx SND_MASTERCTRL_REG
-ExSfx2: rts
-
-Square2SfxHandler:
-        lda Square2SoundBuffer ;special handling for the 1-up sound to keep it
-        and #Sfx_ExtraLife     ;from being interrupted by other sounds on square 2
-        bne ContinueExtraLife
-        ldy Square2SoundQueue  ;check for sfx in queue
-        beq CheckSfx2Buffer
-        sty Square2SoundBuffer ;if found, put in buffer and check for the following
-        bmi PlayBowserFall     ;bowser fall
-        lsr Square2SoundQueue
-        bcs PlayCoinGrab       ;coin grab
-        lsr Square2SoundQueue
-        bcs PlayGrowPowerUp    ;power-up reveal
-        lsr Square2SoundQueue
-        bcs PlayGrowVine       ;vine grow
-        lsr Square2SoundQueue
-        bcs PlayBlast          ;fireworks/gunfire
-        lsr Square2SoundQueue
-        bcs PlayTimerTick      ;timer tick
-        lsr Square2SoundQueue
-        bcs PlayPowerUpGrab    ;power-up grab
-        lsr Square2SoundQueue
-        bcs PlayExtraLife      ;1-up
-
-CheckSfx2Buffer:
-        lda Square2SoundBuffer   ;check for sfx in buffer
-        beq ExS2H                ;if not found, exit sub
-        bmi ContinueBowserFall   ;bowser fall
-        lsr
-        bcs Cont_CGrab_TTick     ;coin grab
-        lsr
-        bcs ContinueGrowItems    ;power-up reveal
-        lsr
-        bcs ContinueGrowItems    ;vine grow
-        lsr
-        bcs ContinueBlast        ;fireworks/gunfire
-        lsr
-        bcs Cont_CGrab_TTick     ;timer tick
-        lsr
-        bcs ContinuePowerUpGrab  ;power-up grab
-        lsr
-        bcs ContinueExtraLife    ;1-up
-ExS2H:  rts
-
-Cont_CGrab_TTick:
-        jmp ContinueCGrabTTick
-
-JumpToDecLength2:
-        jmp DecrementSfx2Length
-
-PlayBowserFall:    
-         lda #$38                ;load length of bowser defeat sound
-         sta Squ2_SfxLenCounter
-         ldy #$c4                ;load contents of reg for bowser defeat sound
-         lda #$18
-BlstSJp: bne PBFRegs
-
-ContinueBowserFall:
-          lda Squ2_SfxLenCounter   ;check for almost near the end
-          cmp #$08
-          bne DecrementSfx2Length
-          ldy #$a4                 ;if so, load the rest of reg contents for bowser defeat sound
-          lda #$5a
-PBFRegs:  ldx #$9f                 ;the fireworks/gunfire sound shares part of reg contents here
-EL_LRegs: bne LoadSqu2Regs         ;this is an unconditional branch outta here
-
-PlayExtraLife:
-        lda #$30                  ;load length of 1-up sound
-        sta Squ2_SfxLenCounter
-
-ContinueExtraLife:
-          lda Squ2_SfxLenCounter   
-          ldx #$03                  ;load new tones only every eight frames
-DivLLoop: lsr
-          bcs JumpToDecLength2      ;if any bits set here, branch to dec the length
-          dex
-          bne DivLLoop              ;do this until all bits checked, if none set, continue
-          tay
-          lda ExtraLifeFreqData-1,y ;load our reg contents
-          ldx #$82
-          ldy #$7f
-          bne EL_LRegs              ;unconditional branch
-
-PlayGrowPowerUp:
-        lda #$10                ;load length of power-up reveal sound
-        bne GrowItemRegs
-
-PlayGrowVine:
-        lda #$20                ;load length of vine grow sound
-
-GrowItemRegs:
-        sta Squ2_SfxLenCounter   
-        lda #$7f                  ;load contents of reg for both sounds directly
-        sta SND_SQUARE2_REG+1
-        lda #$00                  ;start secondary counter for both sounds
-        sta Sfx_SecondaryCounter
-
-ContinueGrowItems:
-        inc Sfx_SecondaryCounter  ;increment secondary counter for both sounds
-        lda Sfx_SecondaryCounter  ;this sound doesn't decrement the usual counter
-        lsr                       ;divide by 2 to get the offset
-        tay
-        cpy Squ2_SfxLenCounter    ;have we reached the end yet?
-        beq StopGrowItems         ;if so, branch to jump, and stop playing sounds
-        lda #$9d                  ;load contents of other reg directly
-        sta SND_SQUARE2_REG
-        lda PUp_VGrow_FreqData,y  ;use secondary counter / 2 as offset for frequency regs
-        jsr SetFreq_Squ2
-        rts
-
-StopGrowItems:
-        jmp EmptySfx2Buffer       ;branch to stop playing sounds
-
-.ifndef ANN
-WindFreqEnvData:
-        .byte $37, $46, $55, $64, $74, $83, $93, $a2
-        .byte $b1, $c0, $d0, $e0, $f1, $f1, $f2, $e2
-        .byte $e2, $c3, $a3, $84, $64, $44, $35, $25
+WindOn:
+     lda LeavesEnabledRAM
+     cmp #'L'
+     bne @Clean
+     lda LeavesEnabledRAM+1
+     cmp #'V'
+     beq @Skip
+@Clean:
+      ldy #$12
+:     lda LeavesXPos,y
+      sta LeavesXPosRAM,y
+      lda LeavesYPos,y
+      sta LeavesYPosRAM,y
+      lda LeavesTile,y
+      sta LeavesTileRAM,y
+      dey
+      bpl :-
+@Skip:
+     lda #$01         ;branch to turn the wind on
+     lda LeavesYPosRAM
+     bne WOn
+WindOff:
+     lda #$00         ;turn the wind off
+WOn: sta WindFlag
+     rts
+;-------------------------------------------------------------------------------------
 .endif
 
-BrickShatterFreqData:
-        .byte $01, $0e, $0e, $0d, $0b, $06, $0c, $0f
-        .byte $0a, $09, $03, $0d, $08, $0d, $06, $0c
 
-SkidSfxFreqData:
-        .byte $47, $49, $42, $4a, $43, $4b
 
-PlaySkidSfx:
-        sty NoiseSoundBuffer
-        lda #$06
-        sta Noise_SfxLenCounter
 
-ContinueSkidSfx:
-        lda Noise_SfxLenCounter
-        tay
-        lda SkidSfxFreqData-1,y
-        sta SND_TRIANGLE_REG+2
-        lda #$18
-        sta SND_TRIANGLE_REG
-        sta SND_TRIANGLE_REG+3
-        bne DecrementSfx3Length
 
-PlayBrickShatter:
-        sty NoiseSoundBuffer
-        lda #$20                 ;load length of brick shatter sound
-        sta Noise_SfxLenCounter
 
-ContinueBrickShatter:
-        lda Noise_SfxLenCounter  
-        lsr                         ;divide by 2 and check for bit set to use offset
-        bcc DecrementSfx3Length
-        tay
-        ldx BrickShatterFreqData,y  ;load reg contents of brick shatter sound
-        lda BrickShatterEnvData,y
 
-PlayNoiseSfx:
-        sta SND_NOISE_REG        ;play the sfx
-        stx SND_NOISE_REG+2
-        lda #$18
-        sta SND_NOISE_REG+3
 
-DecrementSfx3Length:
-        dec Noise_SfxLenCounter  ;decrement length of sfx
-        bne ExSfx3
-        lda #$f0                 ;if done, stop playing the sfx
-        sta SND_NOISE_REG
-        lda #$00
-        sta SND_TRIANGLE_REG
-        lda #$00
-        sta NoiseSoundBuffer
-ExSfx3: rts
 
-NoiseSfxHandler:
-        lda NoiseSoundBuffer
-        bmi ContinueSkidSfx
-        ldy NoiseSoundQueue
-        bmi PlaySkidSfx
-        lsr NoiseSoundQueue
-        bcs PlayBrickShatter
-        lsr
-        bcs ContinueBrickShatter
-        lsr NoiseSoundQueue
-        bcs PlayBowserFlame
-        lsr
-        bcs ContinueBowserFlame
-.ifndef ANN
-        lsr
-        bcs ContinueWindSfx
-        lsr NoiseSoundQueue
-        bcs PlayWindSfx
-.endif
-        rts
 
-PlayBowserFlame:
-        sty NoiseSoundBuffer
-        lda #$40                    ;load length of bowser flame sound
-        sta Noise_SfxLenCounter
 
-ContinueBowserFlame:
-        lda Noise_SfxLenCounter
-        lsr
-        tay
-        ldx #$0f                    ;load reg contents of bowser flame sound
-        lda BowserFlameEnvData-1,y
-WindBranch:
-        bne PlayNoiseSfx            ;unconditional branch here
+
+
+;-------------------------------------------------------------------------------------
 
 .ifndef ANN
-PlayWindSfx:
-        sty NoiseSoundBuffer
-        lda #$c0
-        sta Noise_SfxLenCounter
-ContinueWindSfx:
-        lsr NoiseSoundQueue         ;get bit for the wind sfx, note that it must
-        bcc ExSfx3                  ;be continuously set in order for it to play
-        lda Noise_SfxLenCounter
-        lsr
-        lsr                         ;divide length counter by 8
-        lsr
-        tay
-        lda WindFreqEnvData,y
-        and #$0f                    ;use lower nybble as frequency data
-        ora #$10
-        tax
-        lda WindFreqEnvData,y       ;use upper nybble as envelope data
-        lsr
-        lsr
-        lsr
-        lsr
-        ora #$10
-        bne WindBranch              ;unconditional branch
+PrintWorld9Msgs:
+       lda OperMode              ;if in game over mode, branch
+       cmp #GameOverMode         ;note this routine only runs after world 8 and replaces
+       beq W9GameOver            ;the routine DemoReset in memory
+       lda FantasyW9MsgFlag      ;if world 9 flag was set earlier, skip this part
+       bne NoFW9
+       lda #AddrTable_FantasyWorld9Msg     ;otherwise set VRAM pointer to print
+       sta VRAM_Buffer_AddrCtrl  ;the hidden fantasy "9 world" message
+       lda #$10
+       sta ScreenTimer
+       inc FantasyW9MsgFlag      ;and set flag to keep it from getting printed again
+NoFW9: lda #$00
+       sta DisableScreenFlag     ;turn screen back on, move on to next screen sub
+       jmp NextScreenTask
+
+W9GameOver:
+    lda #$20
+    sta ScreenTimer
+    lda #AddrTable_SuperPlayerMsg ;set VRAM pointer to print world 9 goodbye message
+    sta VRAM_Buffer_AddrCtrl
+    jmp NextOperTask          ;move on to next task
 .endif
 
-;--------------------------------
+ScreenSubsForFinalRoom:
+    lda ScreenRoutineTask
+    jsr JumpEngine
 
-ContinueMusic:
-        jmp HandleSquare2Music  ;if we have music, start with square 2 channel
-
-MusicHandler:
-        lda EventMusicQueue     ;check event music queue
-        bne LoadEventMusic
-        lda AreaMusicQueue      ;check area music queue
-        bne LoadAreaMusic
-        lda EventMusicBuffer    ;check both buffers
-        ora AreaMusicBuffer
-        bne ContinueMusic 
-        rts                     ;no music, then leave
-
-LoadEventMusic:
-           sta EventMusicBuffer      ;copy event music queue contents to buffer
-           cmp #DeathMusic           ;is it death music?
-           bne NoStopSfx             ;if not, jump elsewhere
-           jsr StopSquare1Sfx        ;stop sfx in square 1 and 2
-           jsr StopSquare2Sfx        ;but clear only square 1's sfx buffer
-NoStopSfx: ldx AreaMusicBuffer
-           stx AreaMusicBuffer_Alt   ;save current area music buffer to be re-obtained later
-           ldy #$00
-           sty NoteLengthTblAdder    ;default value for additional length byte offset
-           sty AreaMusicBuffer       ;clear area music buffer
-           cmp #TimeRunningOutMusic  ;is it time running out music?
-           bne FindEventMusicHeader
-           ldx #$08                  ;load offset to be added to length byte of header
-           stx NoteLengthTblAdder
-           bne FindEventMusicHeader  ;unconditional branch
-
-LoadAreaMusic:
-         cmp #$04                  ;is it underground music?
-         bne NoStop1               ;no, do not stop square 1 sfx
-         jsr StopSquare1Sfx
-NoStop1: ldy #$10                  ;start counter used only by ground level music
-GMLoopB: sty GroundMusicHeaderOfs
-
-HandleAreaMusicLoopB:
-         ldy #$00                  ;clear event music buffer
-         sty EventMusicBuffer
-         sta AreaMusicBuffer       ;copy area music queue contents to buffer
-         cmp #$01                  ;is it ground level music?
-         bne FindAreaMusicHeader
-         inc GroundMusicHeaderOfs  ;increment but only if playing ground level music
-         ldy GroundMusicHeaderOfs  ;is it time to loopback ground level music?
-         cpy #$32
-         bne LoadHeader            ;branch ahead with alternate offset
-         ldy #$11
-         bne GMLoopB               ;unconditional branch
-
-FindAreaMusicHeader:
-        ldy #$08                   ;load Y for offset of area music
-        sty MusicOffset_Square2    ;residual instruction here
-
-FindEventMusicHeader:
-        iny                       ;increment Y pointer based on previously loaded queue contents
-        lsr                       ;bit shift and increment until we find a set bit for music
-        bcc FindEventMusicHeader
-
-LoadHeader:
-        lda MusicHeaderOffsetData,y  ;load offset for header
-        tay
-        lda MusicHeaderData,y        ;now load the header
-        sta NoteLenLookupTblOfs
-        lda MusicHeaderData+1,y
-        sta MusicDataLow
-        lda MusicHeaderData+2,y
-        sta MusicDataHigh
-        lda MusicHeaderData+3,y
-        sta MusicOffset_Triangle
-        lda MusicHeaderData+4,y
-        sta MusicOffset_Square1
-        lda MusicHeaderData+5,y
-        sta MusicOffset_Noise
-        sta NoiseDataLoopbackOfs
-        lda #$01                     ;initialize music note counters
-        sta Squ2_NoteLenCounter
-        sta Squ1_NoteLenCounter
-        sta Tri_NoteLenCounter
-        sta Noise_BeatLenCounter
-        lda #$00                     ;initialize music data offset for square 2
-        sta MusicOffset_Square2
-        sta AltRegContentFlag        ;initialize alternate control reg data used by square 1
-        lda #$0b                     ;disable triangle channel and reenable it
-        sta SND_MASTERCTRL_REG
-        lda #$0f
-        sta SND_MASTERCTRL_REG
-
-HandleSquare2Music:
-        dec Squ2_NoteLenCounter  ;decrement square 2 note length
-        bne MiscSqu2MusicTasks   ;is it time for more data?  if not, branch to end tasks
-        ldy MusicOffset_Square2  ;increment square 2 music offset and fetch data
-        inc MusicOffset_Square2
-        lda (MusicData),y
-        beq EndOfMusicData       ;if zero, the data is a null terminator
-        bpl Squ2NoteHandler      ;if non-negative, data is a note
-        bne Squ2LengthHandler    ;otherwise it is length data
-
-EndOfMusicData:
-        lda EventMusicBuffer     ;check secondary buffer for time running out music
-        cmp #TimeRunningOutMusic
-        bne NotTRO
-        lda AreaMusicBuffer_Alt  ;load previously saved contents of primary buffer
-        bne MusicLoopBack        ;and start playing the song again if there is one
-NotTRO: and #VictoryMusic        ;check for victory music (the only secondary that loops)
-        bne VictoryMLoopBack
-        lda AreaMusicBuffer      ;check primary buffer for any music except pipe intro
-        and #%01011111
-        bne MusicLoopBack        ;if any area music except pipe intro, music loops
-        lda #$00                 ;clear primary and secondary buffers and initialize
-        sta AreaMusicBuffer      ;control regs of square and triangle channels
-        sta EventMusicBuffer
-        sta SND_TRIANGLE_REG
-        lda #$90    
-        sta SND_SQUARE1_REG
-        sta SND_SQUARE2_REG
-        rts
-
-MusicLoopBack:
-        jmp HandleAreaMusicLoopB
-
-VictoryMLoopBack:
-        jmp LoadEventMusic
-
-Squ2LengthHandler:
-        jsr ProcessLengthData    ;store length of note
-        sta Squ2_NoteLenBuffer
-        ldy MusicOffset_Square2  ;fetch another byte (MUST NOT BE LENGTH BYTE!)
-        inc MusicOffset_Square2
-        lda (MusicData),y
-
-Squ2NoteHandler:
-          ldx Square2SoundBuffer     ;is there a sound playing on this channel?
-          bne SkipFqL1
-          jsr SetFreq_Squ2           ;no, then play the note
-          beq Rest                   ;check to see if note is rest
-          jsr LoadControlRegs        ;if not, load control regs for square 2
-Rest:     sta Squ2_EnvelopeDataCtrl  ;save contents of A
-          jsr Dump_Sq2_Regs          ;dump X and Y into square 2 control regs
-SkipFqL1: lda Squ2_NoteLenBuffer     ;save length in square 2 note counter
-          sta Squ2_NoteLenCounter
-
-MiscSqu2MusicTasks:
-           lda Square2SoundBuffer     ;is there a sound playing on square 2?
-           bne HandleSquare1Music
-           lda EventMusicBuffer       ;check for death music or d4 set on secondary buffer
-           and #%10010001             ;note that regs for death music or d4 are loaded by default
-           bne HandleSquare1Music
-           ldy Squ2_EnvelopeDataCtrl  ;check for contents saved from LoadControlRegs
-           beq NoDecEnv1
-           dec Squ2_EnvelopeDataCtrl  ;decrement unless already zero
-NoDecEnv1: jsr LoadEnvelopeData       ;do a load of envelope data to replace default
-           sta SND_SQUARE2_REG        ;based on offset set by first load unless playing
-           ldx #$7f                   ;death music or d4 set on secondary buffer
-           stx SND_SQUARE2_REG+1
-
-HandleSquare1Music:
-        ldy MusicOffset_Square1    ;is there a nonzero offset here?
-        beq HandleTriangleMusic    ;if not, skip ahead to the triangle channel
-        dec Squ1_NoteLenCounter    ;decrement square 1 note length
-        bne MiscSqu1MusicTasks     ;is it time for more data?
-
-FetchSqu1MusicData:
-        ldy MusicOffset_Square1    ;increment square 1 music offset and fetch data
-        inc MusicOffset_Square1
-        lda (MusicData),y
-        bne Squ1NoteHandler        ;if nonzero, then skip this part
-        lda #$83
-        sta SND_SQUARE1_REG        ;store some data into control regs for square 1
-        lda #$94                   ;and fetch another byte of data, used to give
-        sta SND_SQUARE1_REG+1      ;death music its unique sound
-        sta AltRegContentFlag
-        bne FetchSqu1MusicData     ;unconditional branch
-
-Squ1NoteHandler:
-           jsr AlternateLengthHandler
-           sta Squ1_NoteLenCounter    ;save contents of A in square 1 note counter
-           ldy Square1SoundBuffer     ;is there a sound playing on square 1?
-           bne HandleTriangleMusic
-           txa
-           and #%00111110             ;change saved data to appropriate note format
-           jsr SetFreq_Squ1           ;play the note
-           beq SkipCtrlL
-           jsr LoadControlRegs
-SkipCtrlL: sta Squ1_EnvelopeDataCtrl  ;save envelope offset
-           jsr Dump_Squ1_Regs
-
-MiscSqu1MusicTasks:
-              lda Square1SoundBuffer     ;is there a sound playing on square 1?
-              bne HandleTriangleMusic
-              lda EventMusicBuffer       ;check for death music or d4 set on secondary buffer
-              and #%10010001
-              bne DeathMAltReg
-              ldy Squ1_EnvelopeDataCtrl  ;check saved envelope offset
-              beq NoDecEnv2
-              dec Squ1_EnvelopeDataCtrl  ;decrement unless already zero
-NoDecEnv2:    jsr LoadEnvelopeData       ;do a load of envelope data
-              sta SND_SQUARE1_REG        ;based on offset set by first load
-DeathMAltReg: lda AltRegContentFlag      ;check for alternate control reg data
-              bne DoAltLoad
-              lda #$7f                   ;load this value if zero, the alternate value
-DoAltLoad:    sta SND_SQUARE1_REG+1      ;if nonzero, and let's move on
-
-HandleTriangleMusic:
-        lda MusicOffset_Triangle
-        dec Tri_NoteLenCounter    ;decrement triangle note length
-        bne HandleNoiseMusic      ;is it time for more data?
-        ldy MusicOffset_Triangle  ;increment triangle music offset and fetch data
-        inc MusicOffset_Triangle
-        lda (MusicData),y
-        beq LoadTriCtrlReg        ;if zero, skip all this and move on to noise 
-        bpl TriNoteHandler        ;if non-negative, data is note
-        jsr ProcessLengthData     ;otherwise, it is length data
-        sta Tri_NoteLenBuffer     ;save contents of A
-        lda #$1f
-        sta SND_TRIANGLE_REG      ;load some default data for triangle control reg
-        ldy MusicOffset_Triangle  ;fetch another byte
-        inc MusicOffset_Triangle
-        lda (MusicData),y
-        beq LoadTriCtrlReg        ;check once more for nonzero data
-
-TriNoteHandler:
-          jsr SetFreq_Tri
-          ldx Tri_NoteLenBuffer   ;save length in triangle note counter
-          stx Tri_NoteLenCounter
-          lda EventMusicBuffer
-          and #%01101110          ;check for death music or d4 set on secondary buffer
-          bne NotDOrD4            ;if playing any other secondary, skip primary buffer check
-          lda AreaMusicBuffer     ;check primary buffer for water or castle level music
-          and #%00001010
-          beq HandleNoiseMusic    ;if playing any other primary, or death or d4, go on to noise routine
-NotDOrD4: txa                     ;if playing water or castle music or any secondary
-          cmp #$12                ;besides death music or d4 set, check length of note
-          bcs LongN
-          lda EventMusicBuffer    ;check for win castle music again if not playing a long note
-          and #EndOfCastleMusic
-          beq MediN
-          lda #$0f                ;load value $0f if playing the win castle music and playing a short
-          bne LoadTriCtrlReg      ;note, load value $1f if playing water or castle level music or any
-MediN:    lda #$1f                ;secondary besides death and d4 except win castle or win castle and playing
-          bne LoadTriCtrlReg      ;a short note, and load value $ff if playing a long note on water, castle
-LongN:    lda #$ff                ;or any secondary (including win castle) except death and d4
-
-LoadTriCtrlReg:           
-        sta SND_TRIANGLE_REG      ;save final contents of A into control reg for triangle
-
-HandleNoiseMusic:
-        lda AreaMusicBuffer       ;check if playing underground or castle music
-        and #%11110011
-        beq ExitMusicHandler      ;if so, skip the noise routine
-        dec Noise_BeatLenCounter  ;decrement noise beat length
-        bne ExitMusicHandler      ;is it time for more data?
-
-FetchNoiseBeatData:
-        ldy MusicOffset_Noise       ;increment noise beat offset and fetch data
-        inc MusicOffset_Noise
-        lda (MusicData),y           ;get noise beat data, if nonzero, branch to handle
-        bne NoiseBeatHandler
-        lda NoiseDataLoopbackOfs    ;if data is zero, reload original noise beat offset
-        sta MusicOffset_Noise       ;and loopback next time around
-        bne FetchNoiseBeatData      ;unconditional branch
-
-NoiseBeatHandler:
-        jsr AlternateLengthHandler
-        sta Noise_BeatLenCounter    ;store length in noise beat counter
-        txa
-        and #%00111110              ;reload data and erase length bits
-        beq SilentBeat              ;if no beat data, silence
-        cmp #$30                    ;check the beat data and play the appropriate
-        beq LongBeat                ;noise accordingly
-        cmp #$20
-        beq StrongBeat
-        and #%00010000  
-        beq SilentBeat
-        lda #$1c        ;short beat data
-        ldx #$03
-        ldy #$18
-        bne PlayBeat
-
-StrongBeat:
-        lda #$1c        ;strong beat data
-        ldx #$0c
-        ldy #$18
-        bne PlayBeat
-
-LongBeat:
-        lda #$1c        ;long beat data
-        ldx #$03
-        ldy #$58
-        bne PlayBeat
-
-SilentBeat:
-        lda #$10        ;silence
-
-PlayBeat:
-        sta SND_NOISE_REG    ;load beat data into noise regs
-        stx SND_NOISE_REG+2
-        sty SND_NOISE_REG+3
-
-ExitMusicHandler:
-        rts
-
-AlternateLengthHandler:
-        tax            ;save a copy of original byte into X
-        ror            ;save LSB from original byte into carry
-        txa            ;reload original byte and rotate three times
-        rol            ;turning xx00000x into 00000xxx, with the
-        rol            ;bit in carry as the MSB here
-        rol
-
-ProcessLengthData:
-        and #%00000111              ;clear all but the three LSBs
-        clc
-        adc NoteLenLookupTblOfs     ;add offset loaded from first header byte
-        adc NoteLengthTblAdder      ;add extra if time running out music
-        tay
-        lda MusicLengthLookupTbl,y  ;load length
-        rts
-
-LoadControlRegs:
-           lda EventMusicBuffer  ;check secondary buffer for win castle music
-           and #EndOfCastleMusic
-           beq NotECstlM
-           lda #$04              ;this value is only used for win castle music
-           bne AllMus            ;unconditional branch
-NotECstlM: lda AreaMusicBuffer
-           and #%01111101        ;check primary buffer for water music
-           beq WaterMus
-           lda #$08              ;this is the default value for all other music
-           bne AllMus
-WaterMus:  lda #$28              ;this value is used for water music and all other event music
-AllMus:    ldx #$82              ;load contents of other sound regs for square 2
-           ldy #$7f
-           rts
-
-LoadEnvelopeData:
-        lda EventMusicBuffer           ;check secondary buffer for win castle music
-        and #EndOfCastleMusic
-        beq LoadUsualEnvData
-        lda EndOfCastleMusicEnvData,y  ;load data from offset for win castle music
-        rts
-
-LoadUsualEnvData:
-        lda AreaMusicBuffer            ;check primary buffer for water music
-        and #%01111101
-        beq LoadWaterEventMusEnvData
-        lda AreaMusicEnvData,y         ;load default data from offset for all other music
-        rts
-
-LoadWaterEventMusEnvData:
-        lda WaterEventMusEnvData,y     ;load data from offset for water music and all other event music
-        rts
-
-MusicHeaderData:
-  .byte DeathMusHdr-MHD
-  .byte GameOverMusHdr-MHD
-  .byte GameOverMusHdr-MHD
-  .byte WinCastleMusHdr-MHD
-  .byte GameOverMusHdr-MHD
-  .byte EndOfLevelMusHdr-MHD
-  .byte TimeRunningOutHdr-MHD
-  .byte SilenceHdr-MHD
-
-  .byte GroundLevelPart1Hdr-MHD   ;area music
-  .byte WaterMusHdr-MHD
-  .byte UndergroundMusHdr-MHD
-  .byte CastleMusHdr-MHD
-  .byte Star_CloudHdr-MHD
-  .byte GroundLevelLeadInHdr-MHD
-  .byte Star_CloudHdr-MHD
-  .byte SilenceHdr-MHD
-
-  .byte GroundLevelLeadInHdr-MHD  ;ground level music layout
-  .byte GroundLevelPart1Hdr-MHD, GroundLevelPart1Hdr-MHD
-  .byte GroundLevelPart2AHdr-MHD, GroundLevelPart2BHdr-MHD, GroundLevelPart2AHdr-MHD, GroundLevelPart2CHdr-MHD
-  .byte GroundLevelPart2AHdr-MHD, GroundLevelPart2BHdr-MHD, GroundLevelPart2AHdr-MHD, GroundLevelPart2CHdr-MHD
-  .byte GroundLevelPart3AHdr-MHD, GroundLevelPart3BHdr-MHD, GroundLevelPart3AHdr-MHD, GroundLevelLeadInHdr-MHD
-  .byte GroundLevelPart1Hdr-MHD, GroundLevelPart1Hdr-MHD
-  .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
-  .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
-  .byte GroundLevelPart3AHdr-MHD, GroundLevelPart3BHdr-MHD, GroundLevelPart3AHdr-MHD, GroundLevelLeadInHdr-MHD
-  .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
-
-;music headers
-;header format is as follows: 
-;1 byte - length byte offset
-;2 bytes -  music data address
-;1 byte - triangle data offset
-;1 byte - square 1 data offset
-;1 byte - noise data offset (not used by secondary music)
-  
-TimeRunningOutHdr:     .byte $08, <TimeRunOutMusData, >TimeRunOutMusData, $27, $18
-Star_CloudHdr:         .byte $20, <Star_CloudMData, >Star_CloudMData, $2e, $1a, $40
-EndOfLevelMusHdr:      .byte $20, <WinLevelMusData, >WinLevelMusData, $3d, $21
+    .word InitScreenPalette
+    .word WriteTopStatusLine
+    .word WriteBottomStatusLine
+    .word DrawFinalRoom
+    .word GetAreaPalette
+    .word GetBackgroundColor
 .ifdef ANN
-ResidualHeaderData:    .byte $20, $fc, $dc, $3f, $1d
-.else
-ResidualHeaderData:    .byte $20, $fb, $dc, $3f, $1d
+    .word SetEndingPalette
 .endif
-UndergroundMusHdr:     .byte $18, <UndergroundMusData, >UndergroundMusData, $00, $00
-SilenceHdr:            .byte $08, <SilenceData, >SilenceData, $00
-CastleMusHdr:          .byte $00, <CastleMusData, >CastleMusData, $93, $62
-GameOverMusHdr:        .byte $18, <GameOverMusData, >GameOverMusData, $1e, $14
-WaterMusHdr:           .byte $08, <WaterMusData, >WaterMusData, $a0, $70, $68
-WinCastleMusHdr:       .byte $08, <EndOfCastleMusData, >EndOfCastleMusData, $4c, $24
-GroundLevelPart1Hdr:   .byte $18, <GroundM_P1Data, >GroundM_P1Data, $2d, $1c, $b8
-GroundLevelPart2AHdr:  .byte $18, <GroundM_P2AData, >GroundM_P2AData, $20, $12, $70
-GroundLevelPart2BHdr:  .byte $18, <GroundM_P2BData, >GroundM_P2BData, $1b, $10, $44
-GroundLevelPart2CHdr:  .byte $18, <GroundM_P2CData, >GroundM_P2CData, $11, $0a, $1c
-GroundLevelPart3AHdr:  .byte $18, <GroundM_P3AData, >GroundM_P3AData, $2d, $10, $58
-GroundLevelPart3BHdr:  .byte $18, <GroundM_P3BData, >GroundM_P3BData, $14, $0d, $3f
-GroundLevelLeadInHdr:  .byte $18, <GroundMLdInData, >GroundMLdInData, $15, $0d, $21
-GroundLevelPart4AHdr:  .byte $18, <GroundM_P4AData, >GroundM_P4AData, $18, $10, $7a
-GroundLevelPart4BHdr:  .byte $18, <GroundM_P4BData, >GroundM_P4BData, $19, $0f, $54
-GroundLevelPart4CHdr:  .byte $18, <GroundM_P4CData, >GroundM_P4CData, $1e, $12, $2b
-DeathMusHdr:           .byte $18, <DeathMusData, >DeathMusData, $1e, $0f, $2d
-
-;--------------------------------
-
-;MUSIC DATA
-;square 2/triangle format
-;d7 - length byte flag (0-note, 1-length)
-;if d7 is set to 0 and d6-d0 is nonzero:
-;d6-d0 - note offset in frequency look-up table (must be even)
-;if d7 is set to 1:
-;d6-d3 - unused
-;d2-d0 - length offset in length look-up table
-;value of $00 in square 2 data is used as null terminator, affects all sound channels
-;value of $00 in triangle data causes routine to skip note
-
-;square 1 format
-;d7-d6, d0 - length offset in length look-up table (bit order is d0,d7,d6)
-;d5-d1 - note offset in frequency look-up table
-;value of $00 in square 1 data is flag alternate control reg data to be loaded
-
-;noise format
-;d7-d6, d0 - length offset in length look-up table (bit order is d0,d7,d6)
-;d5-d4 - beat type (0 - rest, 1 - short, 2 - strong, 3 - long)
-;d3-d1 - unused
-;value of $00 in noise data is used as null terminator, affects only noise
-
-;all music data is organized into sections (unless otherwise stated):
-;square 2, square 1, triangle, noise
-
-Star_CloudMData:
-      .byte $84, $2c, $2c, $2c, $82, $04, $2c, $04, $85, $2c, $84, $2c, $2c
-      .byte $2a, $2a, $2a, $82, $04, $2a, $04, $85, $2a, $84, $2a, $2a, $00
-
-      .byte $1f, $1f, $1f, $98, $1f, $1f, $98, $9e, $98, $1f
-      .byte $1d, $1d, $1d, $94, $1d, $1d, $94, $9c, $94, $1d
-
-      .byte $86, $18, $85, $26, $30, $84, $04, $26, $30
-      .byte $86, $14, $85, $22, $2c, $84, $04, $22, $2c
-
-      .byte $21, $d0, $c4, $d0, $31, $d0, $c4, $d0, $00
-
-GroundM_P1Data:
-      .byte $85, $2c, $22, $1c, $84, $26, $2a, $82, $28, $26, $04
-      .byte $87, $22, $34, $3a, $82, $40, $04, $36, $84, $3a, $34
-      .byte $82, $2c, $30, $85, $2a
-
-SilenceData:
-      .byte $00
-
-      .byte $5d, $55, $4d, $15, $19, $96, $15, $d5, $e3, $eb
-      .byte $2d, $a6, $2b, $27, $9c, $9e, $59
-
-      .byte $85, $22, $1c, $14, $84, $1e, $22, $82, $20, $1e, $04, $87
-      .byte $1c, $2c, $34, $82, $36, $04, $30, $34, $04, $2c, $04, $26
-      .byte $2a, $85, $22
-
-GroundM_P2AData:
-      .byte $84, $04, $82, $3a, $38, $36, $32, $04, $34
-      .byte $04, $24, $26, $2c, $04, $26, $2c, $30, $00
-
-      .byte $05, $b4, $b2, $b0, $2b, $ac, $84
-      .byte $9c, $9e, $a2, $84, $94, $9c, $9e
-
-      .byte $85, $14, $22, $84, $2c, $85, $1e
-      .byte $82, $2c, $84, $2c, $1e
-
-GroundM_P2BData:
-      .byte $84, $04, $82, $3a, $38, $36, $32, $04, $34
-      .byte $04, $64, $04, $64, $86, $64, $00
-
-      .byte $05, $b4, $b2, $b0, $2b, $ac, $84
-      .byte $37, $b6, $b6, $45
-
-      .byte $85, $14, $1c, $82, $22, $84, $2c
-      .byte $4e, $82, $4e, $84, $4e, $22
-
-GroundM_P2CData:
-      .byte $84, $04, $85, $32, $85, $30, $86, $2c, $04, $00
-
-      .byte $05, $a4, $05, $9e, $05, $9d, $85
-      
-      .byte $84, $14, $85, $24, $28, $2c, $82
-      .byte $22, $84, $22, $14
-
-      .byte $21, $d0, $c4, $d0, $31, $d0, $c4, $d0, $00
-
-GroundM_P3AData:
-      .byte $82, $2c, $84, $2c, $2c, $82, $2c, $30
-      .byte $04, $34, $2c, $04, $26, $86, $22, $00
-
-      .byte $a4, $25, $25, $a4, $29, $a2, $1d, $9c, $95
-
-GroundM_P3BData:
-      .byte $82, $2c, $2c, $04, $2c, $04, $2c, $30, $85, $34, $04, $04, $00
-
-      .byte $a4, $25, $25, $a4, $a8, $63, $04
-
-;triangle data used by both sections of third part
-      .byte $85, $0e, $1a, $84, $24, $85, $22, $14, $84, $0c
-
-GroundMLdInData:
-      .byte $82, $34, $84, $34, $34, $82, $2c, $84, $34, $86, $3a, $04, $00
-
-      .byte $a0, $21, $21, $a0, $21, $2b, $05, $a3
-
-      .byte $82, $18, $84, $18, $18, $82, $18, $18, $04, $86, $3a, $22
-
-;noise data used by lead-in and third part sections
-      .byte $31, $90, $31, $90, $31, $71, $31, $90, $90, $90, $00
-
-GroundM_P4AData:
-      .byte $82, $34, $84, $2c, $85, $22, $84, $24
-      .byte $82, $26, $36, $04, $36, $86, $26, $00
-
-      .byte $ac, $27, $5d, $1d, $9e, $2d, $ac, $9f
-
-      .byte $85, $14, $82, $20, $84, $22, $2c
-      .byte $1e, $1e, $82, $2c, $2c, $1e, $04
-
-GroundM_P4BData:
-      .byte $87, $2a, $40, $40, $40, $3a, $36 
-      .byte $82, $34, $2c, $04, $26, $86, $22, $00
-
-      .byte $e3, $f7, $f7, $f7, $f5, $f1, $ac, $27, $9e, $9d
-
-      .byte $85, $18, $82, $1e, $84, $22, $2a
-      .byte $22, $22, $82, $2c, $2c, $22, $04
-
-DeathMusData:
-      .byte $86, $04 ;death music share data with fourth part c of ground level music 
-
-GroundM_P4CData:
-      .byte $82, $2a, $36, $04, $36, $87, $36, $34, $30, $86, $2c, $04, $00
-      
-      .byte $00, $68, $6a, $6c, $45 ;death music only
-
-      .byte $a2, $31, $b0, $f1, $ed, $eb, $a2, $1d, $9c, $95
-
-      .byte $86, $04 ;death music only
-
-      .byte $85, $22, $82, $22, $87, $22, $26, $2a, $84, $2c, $22, $86, $14
-
-;noise data used by fourth part sections
-      .byte $51, $90, $31, $11, $00
-
-CastleMusData:
-      .byte $80, $22, $28, $22, $26, $22, $24, $22, $26
-      .byte $22, $28, $22, $2a, $22, $28, $22, $26
-      .byte $22, $28, $22, $26, $22, $24, $22, $26
-      .byte $22, $28, $22, $2a, $22, $28, $22, $26
-      .byte $20, $26, $20, $24, $20, $26, $20, $28
-      .byte $20, $26, $20, $28, $20, $26, $20, $24
-      .byte $20, $26, $20, $24, $20, $26, $20, $28
-      .byte $20, $26, $20, $28, $20, $26, $20, $24
-      .byte $28, $30, $28, $32, $28, $30, $28, $2e
-      .byte $28, $30, $28, $2e, $28, $2c, $28, $2e
-      .byte $28, $30, $28, $32, $28, $30, $28, $2e
-      .byte $28, $30, $28, $2e, $28, $2c, $28, $2e, $00
-
-      .byte $04, $70, $6e, $6c, $6e, $70, $72, $70, $6e
-      .byte $70, $6e, $6c, $6e, $70, $72, $70, $6e
-      .byte $6e, $6c, $6e, $70, $6e, $70, $6e, $6c
-      .byte $6e, $6c, $6e, $70, $6e, $70, $6e, $6c
-      .byte $76, $78, $76, $74, $76, $74, $72, $74
-      .byte $76, $78, $76, $74, $76, $74, $72, $74
-
-      .byte $84, $1a, $83, $18, $20, $84, $1e, $83, $1c, $28
-      .byte $26, $1c, $1a, $1c
-
-GameOverMusData:
-      .byte $82, $2c, $04, $04, $22, $04, $04, $84, $1c, $87
-      .byte $26, $2a, $26, $84, $24, $28, $24, $80, $22, $00
-
-      .byte $9c, $05, $94, $05, $0d, $9f, $1e, $9c, $98, $9d
-
-      .byte $82, $22, $04, $04, $1c, $04, $04, $84, $14
-      .byte $86, $1e, $80, $16, $80, $14
-
-TimeRunOutMusData:
-      .byte $81, $1c, $30, $04, $30, $30, $04, $1e, $32, $04, $32, $32
-      .byte $04, $20, $34, $04, $34, $34, $04, $36, $04, $84, $36, $00
-
-      .byte $46, $a4, $64, $a4, $48, $a6, $66, $a6, $4a, $a8, $68, $a8
-      .byte $6a, $44, $2b
-
-      .byte $81, $2a, $42, $04, $42, $42, $04, $2c, $64, $04, $64, $64
-      .byte $04, $2e, $46, $04, $46, $46, $04, $22, $04, $84, $22
-
-WinLevelMusData:
-      .byte $87, $04, $06, $0c, $14, $1c, $22, $86, $2c, $22
-      .byte $87, $04, $60, $0e, $14, $1a, $24, $86, $2c, $24
-      .byte $87, $04, $08, $10, $18, $1e, $28, $86, $30, $30
-      .byte $80, $64, $00
-
-      .byte $cd, $d5, $dd, $e3, $ed, $f5, $bb, $b5, $cf, $d5
-      .byte $db, $e5, $ed, $f3, $bd, $b3, $d1, $d9, $df, $e9
-      .byte $f1, $f7, $bf, $ff, $ff, $ff, $34
-      .byte $00 ;unused byte
-
-      .byte $86, $04, $87, $14, $1c, $22, $86, $34, $84, $2c
-      .byte $04, $04, $04, $87, $14, $1a, $24, $86, $32, $84
-      .byte $2c, $04, $86, $04, $87, $18, $1e, $28, $86, $36
-      .byte $87, $30, $30, $30, $80, $2c
-
-;square 2 and triangle use the same data, square 1 is unused
-UndergroundMusData:
-      .byte $82, $14, $2c, $62, $26, $10, $28, $80, $04
-      .byte $82, $14, $2c, $62, $26, $10, $28, $80, $04
-      .byte $82, $08, $1e, $5e, $18, $60, $1a, $80, $04
-      .byte $82, $08, $1e, $5e, $18, $60, $1a, $86, $04
-      .byte $83, $1a, $18, $16, $84, $14, $1a, $18, $0e, $0c
-      .byte $16, $83, $14, $20, $1e, $1c, $28, $26, $87
-      .byte $24, $1a, $12, $10, $62, $0e, $80, $04, $04
-      .byte $00
-
-;noise data directly follows square 2 here unlike in other songs
-WaterMusData:
-      .byte $82, $18, $1c, $20, $22, $26, $28 
-      .byte $81, $2a, $2a, $2a, $04, $2a, $04, $83, $2a, $82, $22
-      .byte $86, $34, $32, $34, $81, $04, $22, $26, $2a, $2c, $30
-      .byte $86, $34, $83, $32, $82, $36, $84, $34, $85, $04, $81, $22
-      .byte $86, $30, $2e, $30, $81, $04, $22, $26, $2a, $2c, $2e
-      .byte $86, $30, $83, $22, $82, $36, $84, $34, $85, $04, $81, $22
-      .byte $86, $3a, $3a, $3a, $82, $3a, $81, $40, $82, $04, $81, $3a
-      .byte $86, $36, $36, $36, $82, $36, $81, $3a, $82, $04, $81, $36
-      .byte $86, $34, $82, $26, $2a, $36
-      .byte $81, $34, $34, $85, $34, $81, $2a, $86, $2c, $00
-
-      .byte $84, $90, $b0, $84, $50, $50, $b0, $00
-
-      .byte $98, $96, $94, $92, $94, $96, $58, $58, $58, $44
-      .byte $5c, $44, $9f, $a3, $a1, $a3, $85, $a3, $e0, $a6
-      .byte $23, $c4, $9f, $9d, $9f, $85, $9f, $d2, $a6, $23
-      .byte $c4, $b5, $b1, $af, $85, $b1, $af, $ad, $85, $95
-      .byte $9e, $a2, $aa, $6a, $6a, $6b, $5e, $9d
-
-      .byte $84, $04, $04, $82, $22, $86, $22
-      .byte $82, $14, $22, $2c, $12, $22, $2a, $14, $22, $2c
-      .byte $1c, $22, $2c, $14, $22, $2c, $12, $22, $2a, $14
-      .byte $22, $2c, $1c, $22, $2c, $18, $22, $2a, $16, $20
-      .byte $28, $18, $22, $2a, $12, $22, $2a, $18, $22, $2a
-      .byte $12, $22, $2a, $14, $22, $2c, $0c, $22, $2c, $14, $22, $34, $12
-      .byte $22, $30, $10, $22, $2e, $16, $22, $34, $18, $26
-      .byte $36, $16, $26, $36, $14, $26, $36, $12, $22, $36
-      .byte $5c, $22, $34, $0c, $22, $22, $81, $1e, $1e, $85, $1e
-      .byte $81, $12, $86, $14
-
-EndOfCastleMusData:
-      .byte $81, $2c, $22, $1c, $2c, $22, $1c, $85, $2c, $04
-      .byte $81, $2e, $24, $1e, $2e, $24, $1e, $85, $2e, $04
-      .byte $81, $32, $28, $22, $32, $28, $22, $85, $32
-      .byte $87, $36, $36, $36, $84, $3a, $00
-
-      .byte $5c, $54, $4c, $5c, $54, $4c
-      .byte $5c, $1c, $1c, $5c, $5c, $5c, $5c
-      .byte $5e, $56, $4e, $5e, $56, $4e
-      .byte $5e, $1e, $1e, $5e, $5e, $5e, $5e
-      .byte $62, $5a, $50, $62, $5a, $50
-      .byte $62, $22, $22, $62, $e7, $e7, $e7, $2b
-
-      .byte $86, $14, $81, $14, $80, $14, $14, $81, $14, $14, $14, $14
-      .byte $86, $16, $81, $16, $80, $16, $16, $81, $16, $16, $16, $16
-      .byte $81, $28, $22, $1a, $28, $22, $1a, $28, $80, $28, $28
-      .byte $81, $28, $87, $2c, $2c, $2c, $84, $30
-
-
-FreqRegLookupTbl:
-      .byte $00, $88, $00, $2f, $00, $00
-      .byte $02, $a6, $02, $80, $02, $5c, $02, $3a
-      .byte $02, $1a, $01, $df, $01, $c4, $01, $ab
-      .byte $01, $93, $01, $7c, $01, $67, $01, $53
-      .byte $01, $40, $01, $2e, $01, $1d, $01, $0d
-      .byte $00, $fe, $00, $ef, $00, $e2, $00, $d5
-      .byte $00, $c9, $00, $be, $00, $b3, $00, $a9
-      .byte $00, $a0, $00, $97, $00, $8e, $00, $86
-      .byte $00, $77, $00, $7e, $00, $71, $00, $54
-      .byte $00, $64, $00, $5f, $00, $59, $00, $50
-      .byte $00, $47, $00, $43, $00, $3b, $00, $35
-      .byte $00, $2a, $00, $23, $04, $75, $03, $57
-      .byte $02, $f9, $02, $cf, $01, $fc, $00, $6a
-
-MusicLengthLookupTbl:
-      .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
-      .byte $04, $08, $10, $20, $40, $18, $30, $0c
-      .byte $03, $06, $0c, $18, $30, $12, $24, $08
-      .byte $36, $03, $09, $06, $12, $1b, $24, $0c
-      .byte $24, $02, $06, $04, $0c, $12, $18, $08
-      .byte $12, $01, $03, $02, $06, $09, $0c, $04
-
-EndOfCastleMusicEnvData:
-      .byte $98, $99, $9a, $9b
-
-AreaMusicEnvData:
-      .byte $90, $94, $94, $95, $95, $96, $97, $98
-
-WaterEventMusEnvData:
-      .byte $90, $91, $92, $92, $93, $93, $93, $94
-      .byte $94, $94, $94, $94, $94, $95, $95, $95
-      .byte $95, $95, $95, $96, $96, $96, $96, $96
-      .byte $96, $96, $96, $96, $96, $96, $96, $96
-      .byte $96, $96, $96, $96, $95, $95, $94, $93
-
-BowserFlameEnvData:
-      .byte $15, $16, $16, $17, $17, $18, $19, $19
-      .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
-      .byte $1f, $1f, $1f, $1e, $1d, $1c, $1e, $1f
-      .byte $1f, $1e, $1d, $1c, $1a, $18, $16, $14
-
-BrickShatterEnvData:
-      .byte $15, $16, $16, $17, $17, $18, $19, $19
-      .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
-
-.res $DFFA - *, $FF
-        .word NMIHandler
-        .word Start
-        .word IRQHandler
+    .word RevealPrincess
+
+DrawFinalRoom:
+    lda #AddrTable_PrincessPeachsRoom   ;draw the princess's room
+    sta VRAM_Buffer_AddrCtrl
+    lda #0
+    sta IRQUpdateFlag
+NextScreenTask:
+    inc ScreenRoutineTask
+    rts
+
+.ifdef ANN
+SetEndingPalette:
+    lda #AddrTable_ANNEndingPalette
+    sta VRAM_Buffer_AddrCtrl
+    inc ScreenRoutineTask
+    rts
+.endif
+
+RevealPrincess:
+    lda HardWorldFlag
+    bne @HardMode
+    lda #$E                    ; this timer is used to match 2j's victory music length
+    sta HackyTimer2
+    lda #$05
+    sta HackyTimer1
+    bne @Continue
+@HardMode:
+.ifndef ANN
+    lda #$D                    ; this timer is used to match 2j's victory music length
+    sta HackyTimer2
+    lda #$ED
+    sta HackyTimer1
+.else
+    lda #$E                    ; this timer is used to match 2j's victory music length
+    sta HackyTimer2
+    lda #$04
+    sta HackyTimer1
+.endif
+@Continue:
+    lda #VictoryMusic          ;residual code from original smb source, this will not
+    sta EventMusicQueue        ;be checked due to alternate vector for sound engine
+    lda #$a2                   ;print game timer
+    lda #$00                   ;aka the victory music
+    sta $0c                    ;residual, this does nothing
+    sta NameTableSelect
+    sta DisableScreenFlag
+    lda #0
+    sta IRQUpdateFlag          ;turn screen back on but without IRQs
+NextOperTask:
+    inc OperMode_Task
+    rts
+
+PrintVictoryMsgsForWorld8:
+         lda MsgFractional          ;if fractional not looped to zero
+         bne IncVMC                 ;then branch to increment it
+         ldy MsgCounter
+         cpy #$0a                   ;if message counter gone past a certain
+         bcs EndVictoryMessages     ;point, branch to set timer and stop printing messages
+         iny
+         iny
+         iny                        ;add 3 to message counter to print the messages
+         cpy #$05                   ;for world 8 (as opposed to worlds 1-7)
+         bne PrintVM
+         sta AreaMusicQueue
+PrintVM: lda SelectedPlayer                           ; check if we are luigi
+         beq @Print
+         cpy #AddrTable_HurrahMsg-$c                  ; are we printing "hurrah mario"?
+         bne :+                                       ; no - skip ahead
+         ldy #AddrTable_HurrahLuigiMsg-$c             ; yes - print "hurrah luigi"
+:        cpy #AddrTable_ThankYouMessageFinal-$c       ; are we printing "thank you mario"?
+         bne @Print                                   ; no - skip ahead
+         ldy #AddrTable_ThankYouLuigiMessageFinal-$c  ; yes - print "thank you luigi"
+@Print:  tya
+         clc
+         adc #$0c                   ;get appropriate range for victory messages
+         sta VRAM_Buffer_AddrCtrl
+IncVMC:  lda MsgFractional
+         clc
+         adc #$04                   ;add four to counter's fractional
+         sta MsgFractional
+         lda MsgCounter             ;add carry to the message counter itself
+         adc #$00
+         sta MsgCounter
+         rts
+
+EndVictoryMessages:
+        lda #$0c                   ;set interval timer, then move onto next task
+        sta WorldEndTimer
+ExAEL:  inc OperMode_Task
+
+EraseEndingCounters:
+        lda #$00
+        sta EndControlCntr
+        sta MRetainerOffset
+        sta CurrentFlashMRet
+NotYet: rts
+
+AwardExtraLives:
+    lda WorldEndTimer          ;wait until timer expires before running this sub
+    bne NotYet
+    lda NumberofLives          ;if counted all extra lives, branch
+    bmi ExAEL                  ;to run another task in victory mode
+    lda SelectTimer
+    bne NotYet                 ;if short delay between each count of extra lives
+    lda #$30                   ;not expired, wait, otherwise, reset the timer
+    sta SelectTimer
+    lda #Sfx_ExtraLife
+    sta Square2SoundQueue
+    dec NumberofLives          ;count down each extra life
+    lda #$01                   ;give 100,000 points to player for each one
+    sta DigitModifier+1
+    jmp EndAreaPoints
+
+BlueTransPalette:
+    .byte $3f, $00, $10
+    .byte $0f, $30, $0f, $0f, $0f, $30, $10, $00, $0f, $21, $12, $21, $0f, $27, $17, $00
+    .byte $00
+
+BlueTints:
+    .byte $01, $02, $11, $21
+
+TwoBlankRows:
+    .byte $22, $86, $55, $24
+    .byte $22, $a6, $55, $24
+    .byte $00
+
+FadeToBlue:
+          inc EndControlCntr   ;increment a counter
+          lda BlueDelayFlag    ;if it's time to fade to blue, branch
+          bne BlueUpdateTiming
+          lda EndControlCntr
+          and #$ff             ;otherwise wait until counter wraps
+          bne ExFade           ;then set the flag
+          inc BlueDelayFlag
+          jmp BlueUpd          ;skip over next part if the flag was just set
+
+BlueUpdateTiming:
+           lda EndControlCntr
+           and #$0f               ;execute the next part only every 16 frames
+           bne ExFade
+BlueUpd:   ldx #$13
+BlueULoop: lda BlueTransPalette,x ;write palette to VRAM buffer
+           sta VRAM_Buffer1,x
+           dex
+           bpl BlueULoop
+           ldx #$0c 
+           ldy BlueColorOfs       ;get color offset
+NextBlue:  lda BlueTints,y        ;set background color based on color offset
+           sta VRAM_Buffer1+3,x
+           dex                    ;be sure to set the same background color
+           dex                    ;in all four palettes (even though only the first
+           dex                    ;one is acknowledged)
+           dex
+           bpl NextBlue
+           inc BlueColorOfs       ;increment to next color which will show up
+           lda BlueColorOfs       ;16 frames later, thus causing a slow color change
+           cmp #$04               ;if not changed to last color, leave
+           bne ExFade
+           inc OperMode_Task      ;otherwise move on to the next task
+ExFade:    rts
+
+EraseLivesLines:
+     ldx #$08                  ;erase bottom two lines
+ELL: lda TwoBlankRows,x
+     sta VRAM_Buffer1,x
+     dex
+     bpl ELL
+     inc OperMode_Task
+     jsr EraseEndingCounters   ;init ending counters
+     lda #$60
+     sta MushroomRetDelay      ;wait before flashing each mushroom retainer in next sub
+     lda #$5F
+     sta DemoTimer             ; hack to try to match the length of smb2j victory music
+     rts
+    
+RunMushroomRetainers:
+       lda HackyTimer1           ; check if simulated music delay is complete to framerule level
+       ora HackyTimer2
+       bne :+                    ; no - keep running
+       lda #0                    ; yes - end music.
+       sta EventMusicBuffer      ;
+:      clc
+       jsr MushroomRetainersForW8  ;draw and flash the seven mushroom retainers
+       lda EventMusicBuffer          ;if still playing victory music, branch to leave
+       bne ExRMR
+       lda HardWorldFlag           ;if on world D, branch elsewhere
+       bne BackToNormal
+       inc OperMode_Task           ;otherwise just move onto the last task
+ExRMR: rts
+
+EndingDiskRoutines:
+      lda DiskIOTask
+      jsr JumpEngine
+
+      .word DiskScreen
+      .word UpdateGamesBeaten
+
+UpdateGamesBeaten:
+BackToNormal:
+    lda #$00                 ; mimic FDS bios
+    sta FrameCounter
+    lda #$00
+    sta OperMode_Task
+.ifdef ANN
+    lda #$00
+    sta OperMode
+    jmp AttractModeSubs
+.else
+    lda HardWorldFlag        ;if in world D, branch to end the game
+    bne EndTheGame
+    lda CompletedWorlds      ;if completed all worlds without skipping over any
+    cmp #$ff                 ;then branch elsewhere (note warping backwards may
+    beq GoToWorld9           ;allow player to complete skipped worlds)
+EndTheGame:
+    lda #$00
+    sta CompletedWorlds      ;init completed worlds flag, go back to title screen mode
+    sta OperMode
+    jmp AttractModeSubs      ;jump to title screen mode routines
+GoToWorld9:
+    lda #$00
+    sta CompletedWorlds      ;init completed worlds flag
+    sta NumberofLives        ;give the player one life
+    sta FantasyW9MsgFlag
+    jmp NextWorld            ;run world 9
+.endif
+
+FlashMRSpriteDataOfs:
+    .byte $50, $b0, $e0, $68, $98, $c8
+
+MRSpriteDataOfs:
+    .byte $80, $50, $68, $80, $98, $b0, $c8
+
+MRetainerYPos:
+    .byte $e0, $b8, $90, $70, $68, $70, $90
+
+MRetainerXPos:
+    .byte $b8, $38, $48, $60, $80, $a0, $b8, $c8
+
+.ifdef ANN
+ANNMRetainerTiles:
+    .byte $80+(6*0)
+    .byte $80+(6*1)
+    .byte $80+(6*2)
+    .byte $80+(6*3)
+    .byte $80+(6*4)
+    .byte $80+(6*5)
+    .byte $80+(6*6) + 10 ; patch
+ANNMRetainerAttr:
+    .byte $02,$03,$01,$02,$03,$01,$03
+.endif
+
+MushroomRetainersForW8:
+    lda MushroomRetDelay        ;wait a bit unless waiting is already done
+    beq DrawFlashMRetainers
+    dec MushroomRetDelay
+    rts
+
+DrawFlashMRetainers:
+    jsr MoveSpritesOffscreen   ;init sprites
+    ldx MRetainerOffset
+    cpx #$07                   ;if 7 mushroom retainers added, branch elsewhere
+    beq FlashMRetainers
+    lda EndControlCntr
+    and #$1f                   ;execute this part once every 32 frames
+    bne DrawMRetainers
+    inc MRetainerOffset        ;add another mushroom retainer
+    lda #Sfx_CoinGrab
+    sta Square2SoundQueue      ;play the coin grab sound
+    jmp DrawMRetainers
+
+FlashMRetainers:
+    lda EndControlCntr
+    and #$1f                   ;execute this part once every 32 frames also
+    bne DrawMRetainers         ;after the counter reaches a certain point
+    inc CurrentFlashMRet
+    lda CurrentFlashMRet       ;increment what's now being used to select a
+    cmp #$0b                   ;mushroom retainer to flash, if not yet at $0b/11
+    bcc DrawMRetainers         ;then go ahead to next part
+    lda #$04
+    sta CurrentFlashMRet       ;otherwise reset to 4
+DrawMRetainers:
+    inc EndControlCntr         ;be sure to count frames
+.ifndef ANN
+    lda WorldNumber
+    pha                        ;save world number and initial retainer offset
+.endif
+    lda MRetainerOffset
+    pha
+    tax                        ;use second counter as offset to one of the spr data offset lists
+DrawMRetLoop:
+    lda CurrentFlashMRet       ;if offset not yet at 4 (first time it starts at 0), branch to skip this
+    cmp #$04                   ;thus adding a delay between the appearance
+    bcc SetupMRet              ;of mushroom retainers and their "flashing"
+    sbc #$04
+    tay                        ;otherwise subtract 4 to get the offset proper
+    lda FlashMRSpriteDataOfs,y ;if the sprite obj data offset pointed at by the current flashing retainer
+    cmp MRSpriteDataOfs,x      ;matches the one pointed at by the offset of the retainer being checked
+    beq NextMRet               ;then branch to skip, do not draw that mushroom retainer
+SetupMRet:
+    ldy MRSpriteDataOfs,x      ;get sprite data offset of the current mushroom retainer
+.ifndef ANN
+    sty Enemy_SprDataOffset
+    lda #$35
+    sta $16                    ;set mushroom retainer object ID
+.endif
+    lda MRetainerYPos,x
+.ifdef ANN
+    sta Sprite_Y_Position+0,y
+    sta Sprite_Y_Position+4,y
+    clc
+    adc #$8
+    sta Sprite_Y_Position+8,y
+    sta Sprite_Y_Position+12,y
+    clc
+    adc #$8
+    sta Sprite_Y_Position+16,y
+    sta Sprite_Y_Position+20,y
+    lda MRetainerXPos,x
+    sta Sprite_X_Position+0,y
+    sta Sprite_X_Position+8,y
+    sta Sprite_X_Position+16,y
+    clc
+    adc #8
+    sta Sprite_X_Position+4,y
+    sta Sprite_X_Position+12,y
+    sta Sprite_X_Position+20,y
+    lda ANNMRetainerTiles-1,x
+    sta $00
+    lda ANNMRetainerAttr-1,x
+    sta $01
+    ldx #$00
+:   lda $00
+    sta Sprite_Tilenumber,y
+    lda $01
+    sta Sprite_Attributes,y
+    iny
+    iny
+    iny
+    iny
+    inc $00
+    inx
+    cpx #$06
+    bne :-
+.else
+    sta Enemy_Y_Position       ;use enemy object 0 for mushroom retainer temporarily
+    lda MRetainerXPos,x
+    sta Enemy_Rel_XPos
+    ldx #$00                   ;set world number and object offset for the graphics handler
+    stx WorldNumber            ;to prevent graphics handler from drawing princess instead
+    stx ObjectOffset
+    jsr EnemyGfxHandler        ;now draw the mushroom retainer
+.endif
+NextMRet:
+    dec MRetainerOffset        ;move to next mushroom retainer using offset
+    ldx MRetainerOffset
+    bne DrawMRetLoop           ;if not drawn all retainers yet, loop to do so
+    pla
+    sta MRetainerOffset        ;reset initial offset
+.ifndef ANN
+    pla
+    sta WorldNumber            ;return world number to what it was to draw princess
+.endif
+    lda #$30
+    sta Enemy_SprDataOffset
+    lda #$b8                   ;return original settings princess uses (note X position
+    sta Enemy_Y_Position       ;will be returned later in enemy object core)
+    rts
+
+;-------------------------------------------------------------------------------------
+
+FinalRoomPalette:
+    .byte $3f, $00, $10
+    .byte $0f, $0f, $0f, $0f, $0f, $30, $10, $00
+    .byte $0f, $21, $12, $02, $0f, $27, $17, $00
+    .byte $00
+
+ThankYouMessageFinal:
+    .byte $20, $e8, $10
+    .byte $1d, $11, $0a, $17, $14, $24, $22, $18, $1e, $24
+    .byte $16, $0a, $1b, $12, $18, $2b
+    .byte $23, $c8, $48, $05
+    .byte $00
+
+ThankYouLuigiMessageFinal:
+    .byte $20, $e8, $10
+    .byte $1d, $11, $0a, $17, $14, $24, $22, $18, $1e, $24
+    .byte $15, $1e, $12, $10, $12, $2b
+    .byte $23, $c8, $48, $05
+    .byte $00
+
+PeaceIsPavedMsg:
+    .byte $21, $09, $0e
+    .byte $19, $0e, $0a, $0c, $0e, $24, $12, $1c, $24
+    .byte $19, $0a, $1f, $0e, $0d
+    .byte $23, $d0, $58, $aa
+    .byte $00
+
+WithKingdomSavedMsg:
+    .byte $21, $47, $12
+    .byte $20, $12, $1d, $11, $24, $14, $12, $17, $10, $0d, $18, $16, $24
+    .byte $1c, $0a, $1f, $0e, $0d
+    .byte $00
+
+HurrahMsg:
+    .byte $21, $89, $10
+    .byte $11, $1e, $1b, $1b, $0a, $11, $24, $1d, $18, $24, $24
+    .byte $16, $0a, $1b, $12, $18
+    .byte $00
+
+HurrahLuigiMsg:
+    .byte $21, $89, $10
+    .byte $11, $1e, $1b, $1b, $0a, $11, $24, $1d, $18, $24, $24
+LuigiName:
+    .byte $15, $1e, $12, $10, $12
+    .byte $00
+
+OurOnlyHeroMsg:
+    .byte $21, $ca, $0d
+    .byte $18, $1e, $1b, $24, $18, $17, $15, $22, $24, $11, $0e, $1b, $18
+    .byte $00
+
+ThisEndsYourTripMsg:
+    .byte $22, $07, $13
+    .byte $1d, $11, $12, $1c, $24, $0e, $17, $0d, $1c, $24, $22, $18, $1e
+    .byte $1b, $24, $1d, $1b, $12, $19
+    .byte $00
+
+OfALongFriendshipMsg:
+    .byte $22, $46, $14
+    .byte $18, $0f, $24, $0a, $24, $15, $18, $17, $10, $24, $0f, $1b, $12
+    .byte $0e, $17, $0d, $1c, $11, $12, $19
+    .byte $00
+
+PointsAddedMsg:
+    .byte $22, $88, $10
+    .byte $01, $00, $00, $00, $00, $00, $24, $19, $1d, $1c, $af, $0a, $0d
+    .byte $0d, $0e, $0d
+
+    .byte $23, $e8, $48, $ff
+    .byte $00
+    
+ForEachPlayerLeftMsg:
+    .byte $22, $a6, $15
+    .byte $0f, $18, $1b, $24, $0e, $0a, $0c, $11, $24, $19, $15, $0a, $22
+    .byte $0e, $1b, $24, $15, $0e, $0f, $1d, $af
+    .byte $00
+
+.ifdef ANN
+ANNEndingPalette:
+.byte $3F,$14,$0C
+.byte $0F,$12,$30,$36,$0F,$36
+.byte $30,$16,$0F,$36,$30,$1A
+.byte $00
+.endif
+
+PrincessPeachsRoom:
+    .byte $20, $80, $60, $5e
+    .byte $20, $a0, $60, $5d
+    .byte $23, $40, $60, $5e
+    .byte $23, $60, $60, $5d
+    .byte $23, $80, $60, $5e
+    .byte $23, $a0, $60, $5d
+    .byte $23, $c0, $50, $55
+    .byte $23, $f0, $50, $55
+    .byte $00
+
+.ifndef ANN       
+FantasyWorld9Msg:
+    .byte $22, $24, $18
+    .byte $20, $0e, $24, $19, $1b, $0e, $1c, $0e, $17, $1d, $24, $0f, $0a
+    .byte $17, $1d, $0a, $1c, $22, $24, $20, $18, $1b, $15, $0d
+
+    .byte $22, $66, $13
+    .byte $15, $0e, $1d, $f2, $1c, $24, $1d, $1b, $22, $24, $76, $09, $24
+    .byte $20, $18, $1b, $15, $0d, $75
+
+    .byte $22, $a9, $0e
+    .byte $20, $12, $1d, $11, $24, $18, $17, $0e, $24, $10, $0a, $16, $0e
+    .byte $af
+    .byte $00
+
+SuperPlayerMsg:
+    .byte $21, $e0, $60, $24
+    .byte $22, $40, $60, $24
+    .byte $22, $25, $16
+    .byte $22, $18, $1e, $f2, $1b, $0e, $24, $0a, $24, $1c, $1e, $19, $0e
+    .byte $1b, $24, $19, $15, $0a, $22, $0e, $1b, $2b
+    .byte $22, $69, $0d
+    .byte $20, $0e, $24, $11, $18, $19, $0e, $24, $20, $0e, $f2, $15, $15
+    .byte $22, $a9, $0e
+    .byte $1c, $0e, $0e, $24, $22, $18, $1e, $24, $0a, $10, $0a, $12, $17
+    .byte $af
+    .byte $22, $e8, $10
+    .byte $16, $0a, $1b, $12, $18, $24, $0a, $17, $0d, $24, $1c, $1d, $0a
+    .byte $0f, $0f, $af
+    .byte $00
+.endif
+
+BankingCode GameBank

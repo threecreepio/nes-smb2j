@@ -5,3 +5,5 @@
 *.deb
 *.dep
 *.lst
+*.nes
+*.nes.map
