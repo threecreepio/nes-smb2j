@@ -865,9 +865,6 @@ GameOverMode          = 3
 
 Start:
 .ifdef ANN
-            nop
-            nop
-            nop
             lda WorldNumber             ;get world number and save it temporarily
             pha
             lda #$27
@@ -919,6 +916,16 @@ EndlessLoop:
 
 ;-------------------------------------------------------------------------------------
 
+AddrTable_VRAM_Buffer1 =               00
+AddrTable_WaterPaletteData =           01
+AddrTable_GroundPaletteData =          02
+AddrTable_UndergroundPaletteData =     03
+AddrTable_CastlePaletteData =          04
+AddrTable_VRAM_Buffer2 =               06
+AddrTable_BowserPaletteData =          08
+AddrTable_DaySnowPaletteData =         09
+AddrTable_NightSnowPaletteData =       10
+AddrTable_MushroomPaletteData =        11
 VRAM_AddrTable:
    .word VRAM_Buffer1               ; 00
    .word WaterPaletteData           ; 01
@@ -1707,7 +1714,10 @@ SetupIntermediate:
       jmp IncSubtask           ;then move onto the next task
 
 AreaPalette:
-      .byte $01, $02, $03, $04
+      .byte AddrTable_WaterPaletteData
+      .byte AddrTable_GroundPaletteData
+      .byte AddrTable_UndergroundPaletteData
+      .byte AddrTable_CastlePaletteData
 
 GetAreaPalette:
                ldy AreaType             ;select appropriate palette to load
@@ -1719,7 +1729,10 @@ NextSubtask:   jmp IncSubtask           ;move onto next task
 ;$00 - used as temp counter in GetPlayerColors
 
 BGColorCtrl_Addr:
-      .byte $00, $09, $0a, $04
+      .byte AddrTable_VRAM_Buffer1
+      .byte AddrTable_DaySnowPaletteData
+      .byte AddrTable_NightSnowPaletteData
+      .byte AddrTable_CastlePaletteData
 
 BackgroundColors:
       .byte $22, $22, $0f, $0f ;used by area type if bg color ctrl not set
@@ -1775,7 +1788,7 @@ GetAlternatePalette1:
                lda AreaStyle            ;check for mushroom level style
                cmp #$01
                bne NoAltPal
-               lda #$0b                 ;if found, load appropriate palette
+               lda #AddrTable_MushroomPaletteData ;if found, load appropriate palette
 SetVRAMAddr_B: sta VRAM_Buffer_AddrCtrl
 NoAltPal:      jmp IncSubtask           ;now onto the next task
 
@@ -1887,7 +1900,7 @@ TaskLoop:  jsr AreaParserTaskHandler ;render column set of current area
            dec ColumnSets            ;do we need to render more column sets?
            bpl OutputCol
            inc ScreenRoutineTask     ;if not, move on to the next task
-OutputCol: lda #$06                  ;set vram buffer to output rendered column set
+OutputCol: lda #AddrTable_VRAM_Buffer2 ;set vram buffer to output rendered column set
            sta VRAM_Buffer_AddrCtrl  ;on next NMI
            rts
 
@@ -2185,7 +2198,7 @@ AttribLoop:  lda $00
              bcc AttribLoop
              sta VRAM_Buffer2,y       ;put null terminator at the end
              sty VRAM_Buffer2_Offset  ;store offset in case we want to do any more
-SetVRAMCtrl: lda #$06
+SetVRAMCtrl: lda #AddrTable_VRAM_Buffer2
              sta VRAM_Buffer_AddrCtrl ;set VRAM address controller to second VRAM buffer
              rts
 
@@ -2270,13 +2283,12 @@ RemoveCoin_Axe:
               bne WriteBlankMT         ;if not water type, use offset
               lda #$04                 ;otherwise load offset for blank metatile used in water
 WriteBlankMT: jsr PutBlockMetatile     ;do a sub to write blank metatile to vram buffer
-              lda #$06
+              lda #AddrTable_VRAM_Buffer2
               sta VRAM_Buffer_AddrCtrl ;set vram address controller to second vram buffer and leave
               rts
 
 ReplaceBlockMetatile:
        jsr WriteBlockMetatile    ;write metatile to vram buffer to replace block object
-       inc Block_ResidualCounter ;increment unused counter (residual code)
        dec Block_RepFlag,x       ;decrement flag (residual code)
        rts                       ;leave
 
@@ -2744,7 +2756,6 @@ InitATLoop:   sta PPU_DATA
               dey
               bne InitATLoop
               sta HorizontalScroll      ;reset scroll variables
-              sta VerticalScroll
               jmp InitScroll            ;initialize scroll registers to zero
 
 ;------------------------------------------------------------------------------------
@@ -2959,11 +2970,6 @@ CopyScore:    lda PlayerScoreDisplay,x ;store player's score digits into high sc
 NoTopSc:      rts
 
 ;-------------------------------------------------------------------------------------
-
-.ifndef ANN
-;unused memory
-      .byte $ff, $ff 
-.endif
 
 DefaultSprOffsets:
       .byte $04, $30, $48, $60, $78, $90, $a8, $c0
@@ -4519,7 +4525,7 @@ CastleBridgeObj:
       jmp ChainObj
 
 AxeObj:
-      lda #$08                  ;load bowser's palette into sprite portion of palette
+      lda #AddrTable_BowserPaletteData ;load bowser's palette into sprite portion of palette
       sta VRAM_Buffer_AddrCtrl
 
 ChainObj:
@@ -4952,7 +4958,7 @@ SaveAB:       lda A_B_Buttons            ;save current A and B button
               lda #$00
               sta Left_Right_Buttons     ;nullify left and right buttons temp variable
 UpdScrollVar: lda VRAM_Buffer_AddrCtrl
-              cmp #$06                   ;if vram address controller set to 6
+              cmp #AddrTable_VRAM_Buffer2 ;if vram address controller set to 6
               beq ExitEng                ;then branch to leave
               lda AreaParserTaskNum      ;otherwise check number of tasks
               bne RunParser
@@ -10856,11 +10862,6 @@ ExtendLB: sbc #$48                ;subtract 72 pixels regardless of enemy object
 TooFar:   jsr EraseEnemyObject    ;erase object if necessary
 ExScrnBd: rts                     ;leave
 
-.ifndef ANN
-;unused space
- .byte $ff
- .endif
-
 ;-------------------------------------------------------------------------------------
 ;$01 - enemy buffer offset
 
@@ -15050,13 +15051,6 @@ SetHFAt: ora $04                    ;add other OAM attributes if necessary
          rts
 
 ;-------------------------------------------------------------------------------------
- 
-.ifndef ANN
-;unused byte
- .byte $ff
-.endif
-
-;-------------------------------------------------------------------------------------
 
 AttractModeSubs:
       lda OperMode_Task
@@ -15774,7 +15768,6 @@ StartGame:
               lda #$00
               sta AreaNumber
               ldx #$0b
-              lda #$00
 InitScore:    sta ScoreAndCoinDisplay,x   ;clear player score and coin display
               dex
               bpl InitScore
@@ -16034,6 +16027,7 @@ TitleScreenGfxData:
        .byte $23, $ea, $04, $95, $aa, $aa, $2a
        .byte $00, $ff, $ff
 .endif
+TitleScreenGfxDataEnd:
 
 ;-------------------------------------------------------------------------------------
 
@@ -17959,10 +17953,6 @@ EndOfCastleMusData:
       .byte $81, $28, $22, $1a, $28, $22, $1a, $28, $80, $28, $28
       .byte $81, $28, $87, $2c, $2c, $2c, $84, $30
 
-.ifndef ANN
-;unused byte
-      .byte $ff
-.endif
 
 FreqRegLookupTbl:
       .byte $00, $88, $00, $2f, $00, $00
