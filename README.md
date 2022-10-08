@@ -1,12 +1,12 @@
 # Super Mario Bros 2J And All Night Nippon NES ports
 
-Port of All Night Nippon, and SMB2j to the NES with MMC5.
+Port of All Night Nippon, and SMB2j to the NES (rather than FDS.)
 
 Why waste time making this? I don't know.
 
 ## Download
 
-To get the latest patches go to https://github.com/threecreepio/nes-mmc52j/releases and download them from there.
+To get the latest patches go to https://github.com/threecreepio/nes-smb2j/releases and download them from there.
 
 You can use https://bbbradsmith.github.io/ipstool/, for example, to apply the patches.
 
