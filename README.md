@@ -12,7 +12,7 @@ You can use https://bbbradsmith.github.io/ipstool/, for example, to apply the pa
 
 The "patch_ann.ips" file applies to an All Night Nippon FDS ROM, SHA1 `f30bdd3c556604d7eaa6d0f4864d5566e519b5d4`. (Compare against the SHA1 in bbbradsmiths patcher to see that you have the right file.)
 
-The "patch_ann.ips" file applies to a Super Mario Bros 2j FDS ROM, SHA1 `20e50128742162ee47561db9e82b2836399c880c`. (Compare against the SHA1 in bbbradsmiths patcher to see that you have the right file.)
+The "patch_2j.ips" file applies to a Super Mario Bros 2j FDS ROM, SHA1 `20e50128742162ee47561db9e82b2836399c880c`. (Compare against the SHA1 in bbbradsmiths patcher to see that you have the right file.)
 
 The output of both is a ".nes" file. Depending on your patcher you may need to change file extension.
 
