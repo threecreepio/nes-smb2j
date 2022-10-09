@@ -142,7 +142,7 @@ VStart:
       lda #1
       sta MMC5_PRGMode       ; use 16kb prg banking
       lsr a
-      sta MMC5_PRGBank3
+      sta MMC5_PRGBank       ; set prg-ram bank to 0
       lda #GameBank
       jsr SetPRGBank
       lda #$44
@@ -152,9 +152,9 @@ VStart:
 SetPRGBank:
     clc
     ora #$80
-    sta MMC5_PRGBank4+1
+    sta MMC5_PRGBank+2
     adc #2
-    sta MMC5_PRGBank4+3
+    sta MMC5_PRGBank+4
     rts
 
 VIRQ:

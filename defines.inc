@@ -27,6 +27,16 @@ JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
 
+MMC5_PRGMode          = $5100
+MMC5_CHRMode          = $5101
+MMC5_RAMProtect1      = $5102
+MMC5_RAMProtect2      = $5103
+MMC5_Nametables       = $5105
+MMC5_CHRBank          = $5120
+MMC5_PRGBank          = $5113
+MMC5_SLCompare        = $5203
+MMC5_SLIRQ            = $5204
+
 ; GAME SPECIFIC DEFINES
 
 ObjectOffset          = $08
@@ -58,24 +68,6 @@ IRQUpdateFlag         = $0722
 IRQAckFlag            = $077b
 DiskIOTask            = $07fc
 NotColdFlag           = $07fd
-MMC5_PRGMode          = $5100
-MMC5_CHRMode          = $5101
-MMC5_RAMProtect1      = $5102
-MMC5_RAMProtect2      = $5103
-MMC5_ExRamMode        = $5104
-MMC5_Nametables       = $5105
-MMC5_FillTile         = $5106
-MMC5_CHRBank          = $5120
-MMC5_PRGBank3         = $5113
-MMC5_PRGBank4         = $5114
-MMC5_PRGBank5         = $5115
-MMC5_PRGBank6         = $5116
-MMC5_PRGBank7         = $5117
-MMC5_VSplitMode       = $5200
-MMC5_VSplitScroll     = $5201
-MMC5_VSplitBank       = $5202
-MMC5_SLCompare        = $5203
-MMC5_SLIRQ            = $5204
 
 
 
@@ -683,11 +675,20 @@ GameOverMode          = 3
 
 
 
-SaveHeader            = $7000
-GamesBeatenCount      = $7003
+SaveHeader            = $7000 ; 3 byte save file header
+GamesBeatenCount      = $7003 ; number of times the player has won
+
+; copies of areadata and enemydata to minimize banking
+AreaDataRAM           = $6000
+EnemyDataRAM          = $6100
+
+; leaves the fly across the screen during wind
 LeavesEnabledRAM      = $6200 +  0
 LeavesYPosRAM         = $6202 +  0
 LeavesXPosRAM         = $6202 + 12
 LeavesTileRAM         = $6202 + 24
-HackyTimer1           = $6300
-HackyTimer2           = $6301
+LeavesEnd             = $6226
+
+; hacky timer for the victory scene ending
+EndingTimer1          = $0100
+EndingTimer2          = $0101

@@ -160,26 +160,27 @@ StoreStyle: sta AreaStyle
             rts
 
 CopyAreaAndEnemyData:
-  ldy #0
-: lda (AreaData),y
-  sta $6000,y
-  iny
-  cmp #$FD
-  bne :-
-  ldy #0
-: lda (EnemyData),y
-  sta $6100,y
-  iny
-  cmp #$FF
-  bne :-
-  lda #$60
-  sta AreaDataHigh
-  lda #$61
-  sta EnemyDataHigh
-  lda #0
-  sta AreaDataLow
-  sta EnemyDataLow
-  rts
+  ldy #0                  ; copy current area data to PRG-RAM
+: lda (AreaData),y        ; so we don't need to bank as much
+  sta AreaDataRAM,y       ;
+  iny                     ;
+  cmp #$FD                ; area data EOF is $FD
+  bne :-                  ;
+  lda #>AreaDataRAM       ; and move the areadata pointers to ram.
+  sta AreaDataHigh        ;
+  lda #<AreaDataRAM       ;
+  sta AreaDataLow         ;
+  ldy #0                  ; then copy enemy data..
+: lda (EnemyData),y       ;
+  sta EnemyDataRAM,y      ;
+  iny                     ;
+  cmp #$FF                ; enemy data EOF is $FF
+  bne :-                  ;
+  lda #>EnemyDataRAM      ; and move the enemydata pointers to ram.
+  sta EnemyDataHigh       ;
+  lda #<EnemyDataRAM      ;
+  sta EnemyDataLow        ;
+  rts                     ; there we are.
 
 ; Letter worlds
 

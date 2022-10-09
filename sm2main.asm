@@ -418,16 +418,16 @@ VictoryModeSubroutines2:
 VictoryModeSubsForW8:
     lda OperMode_Task
     tay
-    cmp #7
-    bcc :+
-    sec
-    lda HackyTimer1
-    sbc #1
-    sta HackyTimer1
-    lda HackyTimer2
-    sbc #0
-    sta HackyTimer2
-:   clc
+    cmp #7                   ; are we after princess reveal?
+    bcc :+                   ;
+    sec                      ; awful hack, we reduce this timer while
+    lda EndingTimer1         ; while in victory mode to simulate the
+    sbc #1                   ; smb2j victory music duration.
+    sta EndingTimer1         ;
+    lda EndingTimer2         ; open to suggestions for a better solution!
+    sbc #0                   ;
+    sta EndingTimer2         ;
+:   clc                      ;
     tya
     jsr JumpEngine
 
@@ -2212,9 +2212,10 @@ SkipByte:     dey
               bpl InitPageLoop  ;do this until all desired pages of memory have been erased
               lda #0
               ldy #0
-:             sta $6300,y
-              sta $6400,y
-              sta $6500,y
+:             sta $6000,y       ; clear a bit of temporary PRG-RAM
+              sta $6100,y
+              sta $6200,y
+              sta $6300,y
               iny
               bne :-
               rts
@@ -15098,22 +15099,22 @@ SetEndingPalette:
 RevealPrincess:
     lda HardWorldFlag
     bne @HardMode
-    lda #$E                    ; this timer is used to match 2j's victory music length
-    sta HackyTimer2
+    lda #$E                   ; this timer is used to match 2j's victory music length
+    sta EndingTimer2
     lda #$05
-    sta HackyTimer1
+    sta EndingTimer1
     bne @Continue
 @HardMode:
 .ifndef ANN
-    lda #$D                    ; this timer is used to match 2j's victory music length
-    sta HackyTimer2
+    lda #$D                   ; this timer is used to match 2j's victory music length
+    sta EndingTimer2
     lda #$ED
-    sta HackyTimer1
+    sta EndingTimer1
 .else
-    lda #$E                    ; this timer is used to match 2j's victory music length
-    sta HackyTimer2
+    lda #$E                   ; this timer is used to match 2j's victory music length
+    sta EndingTimer2
     lda #$04
-    sta HackyTimer1
+    sta EndingTimer1
 .endif
 @Continue:
     lda #VictoryMusic          ;residual code from original smb source, this will not
@@ -15253,8 +15254,8 @@ ELL: lda TwoBlankRows,x
      rts
     
 RunMushroomRetainers:
-       lda HackyTimer1           ; check if simulated music delay is complete to framerule level
-       ora HackyTimer2
+       lda EndingTimer1          ; check if simulated music delay is complete to framerule level
+       ora EndingTimer2
        bne :+                    ; no - keep running
        lda #0                    ; yes - end music.
        sta EventMusicBuffer      ;
