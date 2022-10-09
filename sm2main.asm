@@ -79,7 +79,7 @@ AddrTable_WaterPaletteData =           01
 AddrTable_GroundPaletteData =          02
 AddrTable_UndergroundPaletteData =     03
 AddrTable_CastlePaletteData =          04
-AddrTable_TitleScreenGfxDataMod =      05
+AddrTable_TitleScreenGfxData =         05
 AddrTable_VRAM_Buffer2 =               06
 AddrTable_BowserPaletteData =          08
 AddrTable_DaySnowPaletteData =         09
@@ -115,7 +115,7 @@ VRAM_AddrTable:
    .word GroundPaletteData           ; 02
    .word UndergroundPaletteData      ; 03
    .word CastlePaletteData           ; 04
-   .word TitleScreenGfxDataMod       ; 05
+   .word TitleScreenGfxData          ; 05
    .word VRAM_Buffer2                ; 06
    .word VRAM_Buffer2                ; 07
    .word BowserPaletteData           ; 08
@@ -523,7 +523,7 @@ IncModeTask:
 DrawTitleScreen:
     lda OperMode       ;if not in attract mode, do not draw title screen
     bne IncModeTask    ;yes, this routine is run in other modes
-    lda #$05
+    lda #AddrTable_TitleScreenGfxData
     jmp SetVRAMAddr_B  ;otherwise set up VRAM address controller accordingly
 
 ;-------------------------------------------------------------------------------------
@@ -14572,7 +14572,7 @@ InitScore:    sta ScoreAndCoinDisplay,x   ;clear player score and coin display
 ExitMenu:     rts
 
 MushroomIconData:
-      .byte $07, $22, $4B, $83, $ce, $24, $24, $00
+      .byte $06, $22, $4B, $83, $ce, $24, $24, $00
 
 DrawMenuCursor:
 DrawMushroomIcon:
@@ -14636,8 +14636,70 @@ TScrClear:   sta VRAM_Buffer1-1,x
              dex
              bne TScrClear
              jsr DrawMenuCursor         ;draw player select cursor
+             jsr WriteTitleScreenStars
              inc ScreenRoutineTask      ;move onto next task
              rts
+
+WriteTitleScreenStars:
+.ifdef ANN
+    @StarsPerLine = 10
+    @PPU_Line1 = $20E6
+    @PPU_Line2 = $20C6
+.else
+    @StarsPerLine = 12
+    @PPU_Line1 = $20D0
+    @PPU_Line2 = $20F0
+.endif
+    lda GamesBeatenCount          ; copy game beaten count to temp value
+    beq @Exit                     ; no need to draw if the player has not beaten the game
+    sta $0                        ;
+    ldx VRAM_Buffer1_Offset       ; load buffer offset
+    lda #>@PPU_Line1              ; set PPU write address to first line of stars
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+    lda #<@PPU_Line1              ;
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+    lda #@StarsPerLine            ; number of stars to draw
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+    jsr @DrawStarLine             ; draw the first line of stars
+    cmp #$f1                      ; check if the last tile we drew was a star
+    bne @Done                     ; no - then we don't need to draw a second line
+    sec                           ; yes - we need to draw a second line
+    lda $0                        ; reduce temp value by one line of stars
+    sbc #@StarsPerLine            ;
+    sta $0                        ;
+    jsr @DrawStarLine2            ; draw second line of stars
+@Done:
+    lda #0                        ; place null terminator
+    sta VRAM_Buffer1,x            ;
+    stx VRAM_Buffer1_Offset       ; and update vram offset
+@Exit:
+    rts                           ; done!
+@DrawStarLine2:
+    lda #>@PPU_Line2              ; set PPU write address to second line of stars
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+    lda #<@PPU_Line2              ;
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+    lda #@StarsPerLine            ; number of stars to draw
+    sta VRAM_Buffer1,x            ;
+    inx                           ;
+@DrawStarLine:
+    ldy #0                        ; set y to zero
+    lda #$f1                      ; $f1 is the star tile
+@DrawNext:
+    cpy $0                        ; check if we have drawn enough stars
+    bne :+                        ; no - keep drawing
+    lda #$26                      ; yes - change to space character
+:   sta VRAM_Buffer1,x            ; store in buffer
+    inx                           ; advance buffer offset
+    iny                           ; decrement number of tiles to draw
+    cpy #@StarsPerLine            ; have we drawn the full line?
+    bne @DrawNext                 ; no - keep drawing
+    rts                           ; yes - exit
 
 WriteTopScore:
                lda #$fa                    ;run display routine to display top score on title
@@ -14651,47 +14713,6 @@ InitializeGame:
 .endif
             sta HardWorldFlag
             sta SelectedPlayer
-.ifdef ANN
-            ldy #$47                 ;set up offset in the title screen tiles
-            lda #$0a                 ;set up counter to print up to 10 stars per row
-.else
-            ldy #$33                 ;set up offset in the title screen tiles
-            lda #$0c                 ;set up counter to print up to 12 stars per row
-.endif
-            sta $00
-
-            ldx #0
-:           lda TitleScreenGfxData,x
-            sta TitleScreenGfxDataMod,x
-            inx
-            bne :-
-:           lda TitleScreenGfxData+$100,x
-            sta TitleScreenGfxDataMod+$100,x
-            inx
-            cpx #TitleScreenGfxDataEnd-TitleScreenGfxData-$100+1
-            bne :-
-
-            ldx #0
-PrintStars: lda #$26                 ;print blank by default
-            cpx GamesBeatenCount     ;check star counter against games beaten
-            bcs PrintToTS            ;if counted up to games beaten, print the blank
-            lda #$f1                 ;otherwise print a star for a beaten game
-PrintToTS:  sta TitleScreenGfxDataMod,y ;print to title screen
-            iny
-            dec $00                  ;decrement until done printing a row
-            bne NextStarR
-.ifdef ANN
-            ldy #$2F                 ;set up offset in title screen tiles for next row
-.else
-            ldy #$4d                 ;set up offset in title screen tiles for next row
-.endif
-NextStarR:  inx
-.ifdef ANN
-            cpx #$14                 ;printed 20 tiles yet?  if not, go back
-.else
-            cpx #$18                 ;printed 24 tiles yet?  if not, go back
-.endif
-            bne PrintStars
             ldy #$6f                 ;clear all memory as in initialization procedure,
             jsr InitializeMemory     ;but this time, clear only as far as $076f
             ldy #$1f

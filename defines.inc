@@ -691,4 +691,3 @@ LeavesXPosRAM         = $6202 + 12
 LeavesTileRAM         = $6202 + 24
 HackyTimer1           = $6300
 HackyTimer2           = $6301
-TitleScreenGfxDataMod = $6D00
