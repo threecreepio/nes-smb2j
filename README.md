@@ -20,5 +20,9 @@ The output of both is a ".nes" file. Depending on your patcher you may need to c
 
 To compile, make sure you have cc65 and make installed in a bash terminal. Then just write 'make', or 'ANN=1 make' to build the Nippon version.
 
+## Credits
+
+Simplistic_Memes - audio fixes
+
 Enjoy!
 /threecreepio
