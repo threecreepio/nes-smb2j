@@ -688,7 +688,3 @@ LeavesYPosRAM         = $6202 +  0
 LeavesXPosRAM         = $6202 + 12
 LeavesTileRAM         = $6202 + 24
 LeavesEnd             = $6226
-
-; hacky timer for the victory scene ending
-EndingTimer1          = $0100
-EndingTimer2          = $0101
