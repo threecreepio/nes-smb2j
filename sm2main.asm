@@ -755,7 +755,7 @@ ScreenRoutines:
 .ifdef ANN
    .word ANNDoNothing
 .else
-   .word DemoReset
+   .word PrintWorld9Msgs
 .endif
    .word ResetSpritesAndScreenTimer
    .word AreaParserTaskControl
@@ -15242,7 +15242,8 @@ UpdateGamesBeaten:
 BackToNormal:
     lda #$00                 ; mimic FDS bios
     sta FrameCounter
-    lda #$00
+    sta DiskIOTask
+    sta FileListNumber
     sta OperMode_Task
 .ifdef ANN
     lda #$00
