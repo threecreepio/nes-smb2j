@@ -52,24 +52,29 @@ EndlessLoop:
 
 
 InitializeCHR:
-    ldy #0
-    sty MMC5_CHRBank+0
-    iny
-    sty MMC5_CHRBank+1
-    iny
-    sty MMC5_CHRBank+2
-    iny
-    sty MMC5_CHRBank+3
-    iny
-    sty MMC5_CHRBank+4
-    iny
-    sty MMC5_CHRBank+5
-    iny
-    sty MMC5_CHRBank+6
-    iny
-    sty MMC5_CHRBank+7
-    iny
-    sty MMC5_CHRBank+8
+    lda #%0000000
+    sta MMC3_BankSelect
+    sta MMC3_BankData
+    lda #%0000001
+    sta MMC3_BankSelect
+    lda #%0000010
+    sta MMC3_BankData
+    lda #%0000010
+    sta MMC3_BankSelect
+    lda #%0000100
+    sta MMC3_BankData
+    lda #%0000011
+    sta MMC3_BankSelect
+    lda #%0000101
+    sta MMC3_BankData
+    lda #%0000100
+    sta MMC3_BankSelect
+    lda #%0000110
+    sta MMC3_BankData
+    lda #%0000101
+    sta MMC3_BankSelect
+    lda #%0000111
+    sta MMC3_BankData
     rts
 
 ;-------------------------------------------------------------------------------------
@@ -152,22 +157,12 @@ VRAM_Buffer_Offset:
 
 ;-------------------------------------------------------------------------------------
 
-NMIHandler:
+_NMIHandler:
    lda Mirror_PPU_CTRL       ;alter name table address to be $2800
    and #%01111110            ;(essentially $2000) and disable another NMI
    sta Mirror_PPU_CTRL       ;from interrupting this one
    sta PPU_CTRL
    sei
-   ldy DisableScreenFlag
-   bne SkipIRQ
-   lda IRQUpdateFlag
-   beq SkipIRQ
-   lda #$1F                  ;set interrupt scanline
-   sta MMC5_SLCompare
-   inc IRQAckFlag            ;reset flag to wait for next IRQ
-   lda #$80
-   sta MMC5_SLIRQ            ;reset IRQ
-SkipIRQ:
    lda Mirror_PPU_MASK
    and #%11100110            ;disable OAM and background display by default
    ldy DisableScreenFlag     ;if screen disabled, skip this
@@ -206,8 +201,18 @@ InitVRAMVars:
    sta VRAM_Buffer_AddrCtrl
    lda Mirror_PPU_MASK
    sta PPU_MASK              ;dump PPU control register 2
+   lda DisableScreenFlag     ;if screen disabled, skip this
+   bne SkipIRQ
+   lda IRQUpdateFlag
+   beq SkipIRQ
+   lda #$1F                  ; enable IRQ
+   sta MMC3_IRQReload
+   sta MMC3_IRQLatch
+   sta MMC3_IRQEnable
+   inc IRQAckFlag
+SkipIRQ:
    cli
-   BankJSR SoundBank, SoundEngine
+   jsr JSL_SoundEngine
    jsr ReadJoypads
    jsr PauseRoutine
    jsr UpdateTopScore
@@ -489,8 +494,10 @@ SetupVictoryMode:
          ora CompletedWorlds     ;set bit according to the world the player was in
          sta CompletedWorlds
 .endif
-         lda #8                  ;load victory mode CHR data
-         sta MMC5_CHRBank+2
+         lda #%00000001
+         sta MMC3_BankSelect
+         lda #8
+         sta MMC3_BankData
          lda HardWorldFlag       ;if not playing worlds A-D, branch to skip this
          beq W1Thru8
          lda WorldNumber         ;otherwise, if not on world D, branch to skip this
@@ -629,7 +636,7 @@ NextWorld: lda #$00
            lda #World9               ;make world 9 loop forever (or until game is over)
 NoPast9:   sta WorldNumber           ;update the world number
 .endif
-           BankJSR AreaBank, LoadAreaPointer
+           jsr JSL_LoadAreaPointer
            inc FetchNewGameTimerFlag ;and get a new game timer
            lda #$01
            sta OperMode              ;and oh yeah, go back to game mode also
@@ -2084,8 +2091,10 @@ InitializeArea:
 ClrTimersLoop: sta Timers,x             ;clear out timer memory
                dex
                bpl ClrTimersLoop
-               lda #2                   ; reset CHR bank
-               sta MMC5_CHRBank+2
+               lda #%00000001
+               sta MMC3_BankSelect
+               asl a
+               sta MMC3_BankData
                lda HalfwayPage
                ldy AltEntranceControl   ;if AltEntranceControl not set, use halfway page, if any found
                beq StartPage
@@ -2111,7 +2120,7 @@ SetInitNTHigh: sty CurrentNTAddr_High   ;store name table address
                dec AreaObjectLength+2
                lda #$0b                 ;set value for renderer to update 12 column sets
                sta ColumnSets           ;12 column sets = 24 metatile columns = 1 1/2 screens
-               BankJSR AreaBank, GetAreaDataAddrs
+               jsr JSL_GetAreaDataAddrs
                lda HardWorldFlag        ;check to see if we're in worlds A-D
                bne SetSecHard           ;if so, activate the secondary no matter where we're at
                lda WorldNumber          ;otherwise check world number
@@ -2441,7 +2450,7 @@ TerminateGame:
 ExRGO: rts
 
 ContinueGame:
-           BankJSR AreaBank, LoadAreaPointer       ;update level pointer with
+           jsr JSL_LoadAreaPointer
            lda #$01                  ;actual world and area numbers, then
            sta PlayerSize            ;reset player's size, status, and
            inc FetchNewGameTimerFlag ;set game timer flag to reload
@@ -4597,7 +4606,7 @@ NextArea: inc AreaNumber            ;increment area number used for address load
           sta LevelNumber
           sta AreaNumber
 .endif
-NotW9:    BankJSR AreaBank, LoadAreaPointer       ;get new level pointer
+NotW9:    jsr JSL_LoadAreaPointer       ;get new level pointer
           inc FetchNewGameTimerFlag ;set flag to load new game timer
           jsr ChgAreaMode           ;do sub to set secondary mode, disable screen and sprite 0
           sta HalfwayPage           ;reset halfway page to 0 (beginning)
@@ -11371,7 +11380,7 @@ SetWDest: tay
           dey                       ;decrement for use as world number
           sty WorldNumber           ;store as world number and offset
           ldx #0
-          BankJSR AreaBank, GetAreaPointer
+          jsr JSL_GetAreaPointer
           sty AreaPointer           ;store area offset here to be used to change areas
           lda #Silence
           sta EventMusicQueue       ;silence music
@@ -12747,6 +12756,8 @@ EnemyGfxHandler:
 .ifdef ANN
        lda #$00
        sta ANNMushroomRetainerGfxHandler
+.else
+       WasteCycles 19              ; waste time to match fds
 .endif
        lda Enemy_Y_Position,x      ;get enemy object vertical position
        sta $02
@@ -14290,7 +14301,7 @@ LoadHardWorlds:
          lda #$03
          sta FileListNumber        ;set filelist number to load SM2DATA4
 NoLoadHW:
-         BankJSR AreaBank, LoadAreaPointer
+         jsr JSL_LoadAreaPointer
          inc Hidden1UpFlag
          inc FetchNewGameTimerFlag
          inc OperMode
@@ -14499,7 +14510,7 @@ GameMenuRoutine:
 .endif
               sta HardWorldFlag
               lda GamesBeatenCount        ;check to see if player has beaten
-              cmp #$08                    ;the game at least 8 times
+              cmp #$00                    ;the game at least 0 times
               bcc StG                     ;if not, start the game as usual at world 1
               lda SavedJoypadBits
               and #A_Button               ;check if the player pressed A + start
@@ -14712,7 +14723,7 @@ ClrSndLoop: sta SoundMemory,y        ;clear out memory used
 DemoReset:
             lda #$18             ;set demo timer
             sta DemoTimer
-            BankJSR AreaBank, LoadAreaPointer
+            jsr JSL_LoadAreaPointer
             jmp InitializeArea
 
 PrimaryGameSetup:
@@ -14788,8 +14799,11 @@ TitleScreenGfxData:
        .byte $21, $c4, $19, $5f, $95, $95, $95, $95, $95, $95, $95, $95, $97
        .byte $98, $78, $95, $96, $95, $95, $97, $98, $97, $98, $95, $78, $95
        .byte $f0, $7a
-       .byte $21, $ef, $0e, $cf, $01, $09, $08, $06, $24, $17, $12, $17, $1d
-       .byte $0e, $17, $0d, $18
+       .byte $21, $ef, $0e
+       ; copyright text
+       ;.byte $cf, $01, $09, $08, $06, $24, $17, $12, $17, $1d, $0e, $17, $0d, $18
+       .byte $24, $24, $24, $0c, $1b, $0e, $0e, $19, $12, $18, $24, $00, $AF, $01
+
        .byte $22, $4d, $0a, $16, $0a, $1b, $12, $18, $24, $10, $0a, $16, $0e
        .byte $22, $8d, $0a, $15, $1e, $12, $10, $12, $24, $10, $0a, $16, $0e
        .byte $22, $eb, $04, $1d, $18, $19, $28
@@ -15540,4 +15554,75 @@ SuperPlayerMsg:
     .byte $00
 .endif
 
-BankingCode GameBank
+NMIHandler:
+      sta MMC3_IRQDisable
+      lda CurrentBank
+      cmp #GameBank
+      beq :+
+      lda #GameBank
+      jsr SetPRGBank
+:     jmp _NMIHandler
+
+VStart:
+      sei
+      ldx #$FF
+      txs
+      lda #%01000000         ; disable apu irq
+      sta $4017
+      lda #0                 ; set vertical mirroring
+      sta MMC3_Mirroring
+      lda #%10000000         ; enable prg ram
+      sta MMC3_RAMProtect
+      lda #GameBank
+      jsr SetPRGBank
+      jsr InitializeCHR
+      jmp $8000
+
+SetPRGBank:
+    clc
+    sta CurrentBank
+    lda #%0000110
+    sta MMC3_BankSelect
+    lda CurrentBank
+    sta MMC3_BankData
+    lda #%0000111
+    sta MMC3_BankSelect
+    lda CurrentBank
+    adc #1
+    sta MMC3_BankData
+    rts
+
+VIRQ:
+    sei
+    php
+    pha
+    tya
+    pha
+    sta MMC3_IRQDisable
+    WasteCycles 30           ; waste some cycles to get to the correct spot to scroll
+    lda Mirror_PPU_CTRL
+    and #%11110110           ;mask out sprite address and nametable
+    ora NameTableSelect
+    sta Mirror_PPU_CTRL      ;update the register and its mirror
+    sta PPU_CTRL
+    lda HorizontalScroll
+    sta PPU_SCROLL           ;set scroll regs for the screen under the status bar
+    lda #$00
+    sta PPU_SCROLL
+    sta IRQAckFlag           ;indicate IRQ was acknowledged
+    pla
+    tay
+    pla
+    plp
+    cli
+    rti
+
+JSL_SoundEngine: MakeBankCall SoundBank, 0, SoundEngine
+JSL_LoadAreaPointer: MakeBankCall AreaBank, 1, LoadAreaPointer
+JSL_GetAreaDataAddrs: MakeBankCall AreaBank, 1, GetAreaDataAddrs
+JSL_GetAreaPointer: MakeBankCall AreaBank, 1, GetAreaPointer
+
+.res $FFFA - *, $FF
+.word NMIHandler
+.word VStart
+.word VIRQ

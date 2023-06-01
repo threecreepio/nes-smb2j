@@ -1,9 +1,8 @@
 MEMORY
 {
 	INES:      start =     0, size =    $10, fill=yes, fillval=$00, type = rw;
-	EMPTYPRG:  start = $8000, size =  $8000, fill=yes, fillval=$FF, type = ro;
-	SNDPRG:    start = $8000, size =  $8000, fill=yes, fillval=$FF, type = ro;
-	AREAPRG:   start = $8000, size =  $8000, fill=yes, fillval=$FF, type = ro;
+	SNDPRG:    start = $8000, size =  $4000, fill=yes, fillval=$FF, type = ro;
+	AREAPRG:   start = $8000, size =  $4000, fill=yes, fillval=$FF, type = ro;
 	SMBPRG:    start = $8000, size =  $8000, fill=yes, fillval=$FF, type = ro;
 	SMBCHR:    start =     0, size =  $4000, fill=yes, fillval=$FF, type = ro;
 }
@@ -11,7 +10,6 @@ MEMORY
 SEGMENTS
 {
 	INES:       load = INES,  type = ro;
-	EMPTYPRG:   load = EMPTYPRG, type = ro;
 	SNDPRG:     load = SNDPRG, type = ro;
 	AREAPRG:    load = AREAPRG, type = ro;
 	SMBPRG:     load = SMBPRG, type = ro;

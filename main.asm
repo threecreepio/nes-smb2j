@@ -2,14 +2,13 @@
 
 .segment "INES"
 .byte $4E,$45,$53,$1A
-.byte 8 ; prg
+.byte 4 ; prg
 .byte 2 ; chr
-.byte $53 ; flags 6
+.byte $43 ; flags 6
 
-EmptyBank =  0
-SoundBank =  4
-AreaBank  =  8
-GameBank  = 12
+SoundBank =  0
+AreaBank  =  2
+GameBank  =  4
 
 ; convert ascii to smb1 charset
 ; space
@@ -101,96 +100,74 @@ GameBank  = 12
 .linecont +
 .autoimport
 
-.macro BankJSR bank, addr
-      sta $103
-      lda #<addr
-      sta $100
-      lda #>addr
-      sta $101
-      lda #bank
-      jsr _BankJSR
+; wastes close to the amount of cycles passed :)
+.macro WasteCycles yvalue
+
+.if yvalue = 0 || yvalue = 1
+.elseif yvalue = 2
+    nop
+.elseif yvalue = 3
+    ldy $0
+.elseif yvalue = 4
+    nop
+    nop
+.elseif yvalue = 5
+    ldy $0
+    nop
+.elseif yvalue = 6
+    nop
+    nop
+    nop
+.elseif yvalue = 7
+    ldy $0
+    nop
+    nop
+.elseif yvalue = 8
+    nop
+    nop
+    nop
+    nop
+.else
+    ldy #((yvalue-3) / 4)  ; 3 cycles
+:   dey                    ; 2 cycles 
+    bne :-                 ; 2 cycles
+.if yvalue = 9
+    ldy $0
+.elseif (yvalue-3) .mod 4 = 3
+    ldy $0
+.elseif (yvalue-3) .mod 4 = 2
+    nop
+.endif
+.endif
+
+
 .endmacro
 
-.macro BankingCode bank
-.res $FF70 - *, $FF
-_BankJSR:
-    sta $102
+
+.macro MakeBankCall bank, wide, routine
+    lda #%110
+    sta MMC3_BankSelect
     lda #bank
-    pha
-    lda $102
-    jsr SetPRGBank
-    lda $103
-    jsr @CallJSR
-    pla
-    jsr SetPRGBank
+    sta MMC3_BankData
+.if wide = 1
+    lda #%111
+    sta MMC3_BankSelect
+    lda #bank+1
+    sta MMC3_BankData
+.endif
+    jsr routine
+    lda #%110
+    sta MMC3_BankSelect
+    lda #GameBank
+    sta MMC3_BankData
+.if wide = 1
+    lda #%111
+    sta MMC3_BankSelect
+    lda #GameBank+1
+    sta MMC3_BankData
+.endif
     rts
-@CallJSR:
-    jmp ($100)
-
-VStart:
-      sei
-      ldx #$FF
-      txs
-      lda #%01000000         ; disable apu irq
-      sta $4017
-      lda #%10
-      sta MMC5_RAMProtect1
-      lda #%01
-      sta MMC5_RAMProtect2
-      lda #3
-      sta MMC5_CHRMode       ; use 1kb chr banking
-      lda #1
-      sta MMC5_PRGMode       ; use 16kb prg banking
-      lsr a
-      sta MMC5_PRGBank       ; set prg-ram bank to 0
-      lda #GameBank
-      jsr SetPRGBank
-      lda #$44
-      sta MMC5_Nametables    ; set vertical mirroring
-      jmp $8000
-
-SetPRGBank:
-    clc
-    ora #$80
-    sta MMC5_PRGBank+2
-    adc #2
-    sta MMC5_PRGBank+4
-    rts
-
-VIRQ:
-    sei
-    php
-    pha
-    lda MMC5_SLIRQ
-    lda Mirror_PPU_CTRL      ; waste some time to get to the end of the scanline
-    lda Mirror_PPU_CTRL      ; waste some time to get to the end of the scanline
-    lda Mirror_PPU_CTRL      ; waste some time to get to the end of the scanline
-    lda Mirror_PPU_CTRL
-    and #%11110110           ;mask out sprite address and nametable
-    ora NameTableSelect
-    sta Mirror_PPU_CTRL      ;update the register and its mirror
-    sta PPU_CTRL
-    lda HorizontalScroll
-    sta PPU_SCROLL           ;set scroll regs for the screen under the status bar
-    lda #$00
-    sta PPU_SCROLL
-    sta IRQAckFlag           ;indicate IRQ was acknowledged
-    tya                      ; waste some time to match 2j irq
-    ldy #$18                 ; ...
-:   dey                      ; ...
-    bne :-                   ; ...
-    tay                      ; ...
-    pla
-    plp
-    cli
-    rti
-
-.res $FFFA - *, $FF
-.word NMIHandler
-.word VStart
-.word VIRQ
 .endmacro
-
 
 .segment "SMBPRG"
 .scope SMBPRG
@@ -208,12 +185,6 @@ VIRQ:
 .scope AREAPRG
 .org $8000
 .include "areas.asm"
-.endscope
-
-.segment "EMPTYPRG"
-.scope EMPTYPRG
-.org $8000
-.include "emptybank.asm"
 .endscope
 
 .segment "SMBCHR"

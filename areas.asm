@@ -2212,8 +2212,3 @@ L_WaterArea9:
   .byte $ce, $0f, $d5, $0d, $6d, $ca, $7d, $47, $fd
 .endif
 ;
-
-
-
-NMIHandler: rti
-BankingCode AreaBank

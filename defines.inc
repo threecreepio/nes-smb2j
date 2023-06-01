@@ -27,15 +27,14 @@ JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
 
-MMC5_PRGMode          = $5100
-MMC5_CHRMode          = $5101
-MMC5_RAMProtect1      = $5102
-MMC5_RAMProtect2      = $5103
-MMC5_Nametables       = $5105
-MMC5_CHRBank          = $5120
-MMC5_PRGBank          = $5113
-MMC5_SLCompare        = $5203
-MMC5_SLIRQ            = $5204
+MMC3_BankSelect       = $8000
+MMC3_BankData         = $8001
+MMC3_Mirroring        = $A000
+MMC3_RAMProtect       = $A001
+MMC3_IRQLatch         = $C000
+MMC3_IRQReload        = $C001
+MMC3_IRQDisable       = $E000
+MMC3_IRQEnable        = $E001
 
 ; GAME SPECIFIC DEFINES
 
@@ -173,17 +172,7 @@ ScoreAndCoinDisplay   = $07dd
 PlayerScoreDisplay    = $07dd
 GameTimerDisplay      = $07ec
 CoinDisplay           = $07e7
-DigitModifier         = $0134
 
-VerticalFlipFlag      = $0109
-FloateyNum_Control    = $0110
-ShellChainCounter     = $0125
-FloateyNum_Timer      = $012c
-FloateyNum_X_Pos      = $0117
-FloateyNum_Y_Pos      = $011e
-FlagpoleFNum_Y_Pos    = $010d
-FlagpoleFNum_YMFDummy = $010e
-FlagpoleScore         = $010f
 FlagpoleCollisionYPos = $070f
 StompChainCounter     = $0484
 FlagpoleMusicFlag     = $07f6
@@ -688,3 +677,16 @@ LeavesYPosRAM         = $6202 +  0
 LeavesXPosRAM         = $6202 + 12
 LeavesTileRAM         = $6202 + 24
 LeavesEnd             = $6226
+
+CurrentBank           = $0100
+VIRQ_BackupY          = $0101
+VerticalFlipFlag      = $0102
+FlagpoleFNum_Y_Pos    = $010d
+FlagpoleFNum_YMFDummy = $010e
+FlagpoleScore         = $010f
+FloateyNum_Control    = $0110
+ShellChainCounter     = $0125
+FloateyNum_Timer      = $012c
+FloateyNum_X_Pos      = $0117
+FloateyNum_Y_Pos      = $011e
+DigitModifier         = $0134
